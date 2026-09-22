@@ -1,0 +1,17 @@
+{
+  "passed": [
+    "Unavailable WebGPU produces explicit fallback, not fake rendering",
+    "Preset selection updates shared scene model",
+    "Inspector tab switching works",
+    "Live numeric editing is reflected in recipes",
+    "Undo restores prior recipe",
+    "Redo restores the edited recipe",
+    "Export dialog opens",
+    "Agent parameter API shares the scene model",
+    "800px layout has accessible studies and no horizontal overflow",
+    "390px layout has accessible studies and no horizontal overflow",
+    "Mobile inspector opens"
+  ],
+  "pageErrors": [],
+  "scope": "DOM only; no Vite install or GPU shader execution"
+}
