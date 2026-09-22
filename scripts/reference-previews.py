@@ -14,7 +14,7 @@ from PIL import Image, PngImagePlugin
 from scipy.ndimage import map_coordinates
 set_num_threads(4)
 ROOT=Path(__file__).resolve().parents[1]
-raw=subprocess.check_output(['node','--input-type=module','-e',"import {PRESETS,preset} from './src/model.js'; import {uniforms} from './src/gpu/uniforms.js'; console.log(JSON.stringify(PRESETS.map(p=>({id:p.id,s:preset(p.id),u:Object.values(uniforms(preset(p.id),960,540,{left:0,top:0,width:960,height:540},'final')).flat()}))));"],cwd=ROOT,text=True)
+raw=subprocess.check_output(['node','--input-type=module','-e',"import {PRESETS,preset} from './src/model.ts'; import {uniforms} from './src/gpu/uniforms.ts'; console.log(JSON.stringify(PRESETS.map(p=>({id:p.id,s:preset(p.id),u:Object.values(uniforms(preset(p.id),960,540,{left:0,top:0,width:960,height:540},'final')).flat()}))));"],cwd=ROOT,text=True)
 PRESETS=json.loads(raw)
 PI=math.pi
 @njit(cache=True)
@@ -208,6 +208,6 @@ if __name__=='__main__':
   u=np.array(p['u'],dtype=float);w,h=512,288
   hdr=render(w,h,u);image=Image.fromarray(post(hdr,u))
   info=PngImagePlugin.PngInfo();info.add_text('Description','CPU illustration; GPU implementation not validated. Noise is approximated. See scripts/reference-previews.py.')
-  (ROOT/'public/presets').mkdir(parents=True,exist_ok=True)
-  image.save(ROOT/f"public/presets/{p['id']}.png",pnginfo=info)
+  (ROOT/'src/assets/presets').mkdir(parents=True,exist_ok=True)
+  image.save(ROOT/f"src/assets/presets/{p['id']}.png",pnginfo=info)
   print('wrote',p['id'],flush=True)
