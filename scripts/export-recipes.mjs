@@ -1,7 +1,7 @@
 // Creates deterministic recipe examples. This does not render or validate a GPU image.
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
-import { PRESETS, preset, documentFor } from '../src/model.js';
+import { PRESETS, preset, documentFor } from '../src/model.ts';
 const root = new URL('../', import.meta.url);
 const read = path => readFile(new URL(path, root), 'utf8');
 const common = await read('src/shaders/common.wgsl');

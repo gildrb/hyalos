@@ -1,8 +1,9 @@
-import { gamutMap } from '../color.js';
-import { loopPhase } from '../model.js';
-export const QUALITY = { draft: [64, 12, 10, 0], balanced: [104, 24, 16, 0], final: [160, 48, 24, 0] };
+import type { Settings, TileRegion, Quality, Vec4 } from '../types.ts';
+import { gamutMap } from '../color.ts';
+import { loopPhase } from '../model.ts';
+export const QUALITY: Record<Quality, Vec4> = { draft: [64, 12, 10, 0], balanced: [104, 24, 16, 0], final: [160, 48, 24, 0] };
 /** Build one host-shareable, explicitly aligned WGSL uniform struct. */
-export function uniforms(s, width, height, tile, quality = 'balanced') {
+export function uniforms(s: Settings, width: number, height: number, tile: TileRegion, quality: Quality = 'balanced'): Record<string, Vec4> {
   const rad = Math.PI / 180;
   return {
     view: [width, height, s.time, s.seed],

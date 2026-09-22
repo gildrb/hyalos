@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT } from '../src/model.js';
-import { renderPixels, exportSequence } from '../src/export.js';
-import { crc32, zip, addPngProject, readPngProject } from '../src/binary.js';
+import { DEFAULT } from '../src/model.ts';
+import { renderPixels, exportSequence } from '../src/export.ts';
+import { crc32, zip, addPngProject, readPngProject } from '../src/binary.ts';
 
 const encode = s => new TextEncoder().encode(s);
 // Public-domain, one-pixel PNG test fixture. No reference art is embedded in the project.

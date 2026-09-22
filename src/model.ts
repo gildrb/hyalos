@@ -1,9 +1,10 @@
+import type { Settings, Study, Palette, NumericKey, Recipe, ExportTile } from './types.ts';
 /** All authored color values are OKLCH: lightness 0..1, chroma, hue in degrees. */
 export const ENGINE = 'exo-prometheus/1';
 export const STORAGE_KEY = 'exo.visuals.v1';
 export const SCENES = ['Prometheus', 'Commons', 'Hearth', 'Relay'];
 export const FINISHES = ['Optical', 'Dot matrix', 'Ordered dither', 'Phosphor'];
-export const PALETTES = {
+export const PALETTES: Record<string, Palette> = {
   'Cold fire': { background: [0.115, 0.018, 270], metal: [0.79, 0.022, 240], energy: [0.84, 0.10, 235] },
   'Ivory': { background: [0.10, 0.008, 85], metal: [0.80, 0.026, 83], energy: [0.91, 0.06, 88] },
   'Ember': { background: [0.12, 0.018, 40], metal: [0.64, 0.08, 53], energy: [0.82, 0.13, 65] },
@@ -23,7 +24,7 @@ export const RANGES = {
   grain: [0, 0.12, 0.001], vignette: [0, 0.6, 0.01], spacing: [3, 20, 0.25], dotSize: [0.15, 0.49, 0.01],
   dither: [0, 1, 0.01], time: [0, 60, 0.001], duration: [2, 60, 1],
 };
-export const DEFAULT = {
+export const DEFAULT: Settings = {
   seed: 240915, scene: 0, finish: 0, rotation: 38, twist: 0.7, spread: 1.28,
   thickness: 0.095, zoom: 1.18, panX: 0.08, panY: 0, yaw: -8, pitch: 0, nodes: 5,
   roughness: 0.38, metallic: 0.7, detail: 0.055,
@@ -33,7 +34,7 @@ export const DEFAULT = {
   grain: 0.026, vignette: 0.24, spacing: 7, dotSize: 0.35, dither: 1,
   time: 0, duration: 12, palette: structuredClone(PALETTES['Cold fire']),
 };
-export const PRESETS = [
+export const PRESETS: readonly Study[] = [
   { id: 'the-gift', name: 'The gift', concept: 'Knowledge, carried into reach.', settings: {} },
   { id: 'commons', name: 'The commons', concept: 'No centre. Many sources.', settings: { scene: 1, rotation: 12, spread: 1.12, zoom: 1.12, density: 0.25, nodes: 7, power: 62, yaw: 18, thickness: 0.042 } },
   { id: 'hearth', name: 'An inner fire', concept: 'Intelligence held close.', settings: { scene: 2, rotation: -25, twist: 0.25, zoom: 1.08, density: 0.24, radius: 0.12, power: 44, yaw: -12, roughness: 0.19, nodes: 3 } },
@@ -41,50 +42,56 @@ export const PRESETS = [
   { id: 'memory', name: 'Material memory', concept: 'A continuous idea, discretised.', settings: { scene: 0, finish: 1, rotation: -8, twist: 1.45, zoom: 1.45, panX: 0.6, exposure: 0.35, contrast: 1.35, spacing: 7.5, dotSize: 0.30, palette: PALETTES.Ivory, grain: 0.012 } },
   { id: 'ignition', name: 'Before ignition', concept: 'Potential before the first spark.', settings: { scene: 2, finish: 2, rotation: 28, zoom: 1.2, twist: -0.4, exposure: 0.25, dither: 0.85, spacing: 3, power: 80, palette: PALETTES.Ember } },
 ];
-export function preset(id) {
+export function preset(id: string): Settings {
   const p = PRESETS.find((entry) => entry.id === id);
   if (!p) throw new Error('Unknown preset.');
   return { ...structuredClone(DEFAULT), ...structuredClone(p.settings) };
 }
-export function validateSettings(value) {
+export function validateSettings(value: unknown): Settings {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Invalid scene settings.');
-  const out = {};
-  for (const [key, range] of Object.entries(RANGES)) {
-    const v = value[key];
+  const input = value as Record<string, unknown>;
+  const numbers = {} as Record<NumericKey, number>;
+  for (const key of Object.keys(RANGES) as NumericKey[]) {
+    const range = RANGES[key];
+    const v = input[key];
     if (typeof v !== 'number' || !Number.isFinite(v) || v < range[0] || v > range[1]) throw new Error(`Invalid ${key}: expected ${range[0]} to ${range[1]}.`);
     if (range[2] === 1 && !Number.isInteger(v)) throw new Error(`${key} must be a whole number.`);
-    out[key] = v;
+    numbers[key] = v;
   }
-  out.palette = {};
-  for (const key of ['background', 'metal', 'energy']) {
-    const color = value.palette?.[key];
-    if (!Array.isArray(color) || color.length !== 3 || !color.every(Number.isFinite) || color[0] < 0 || color[0] > 1 || color[1] < 0 || color[1] > 0.4 || color[2] < 0 || color[2] > 360) throw new Error(`Invalid OKLCH ${key} color.`);
-    out.palette[key] = [...color];
+  const palette = input.palette;
+  if (!palette || typeof palette !== 'object' || Array.isArray(palette)) throw new Error('Invalid OKLCH palette.');
+  const result = {} as Palette;
+  for (const key of ['background', 'metal', 'energy'] as const) {
+    const color = (palette as Record<string, unknown>)[key];
+    if (!Array.isArray(color) || color.length !== 3 || !color.every(v => typeof v === 'number' && Number.isFinite(v)) || color[0] < 0 || color[0] > 1 || color[1] < 0 || color[1] > 0.4 || color[2] < 0 || color[2] > 360) throw new Error(`Invalid OKLCH ${key} color.`);
+    result[key] = [color[0], color[1], color[2]];
   }
-  return out;
+  return { ...numbers, palette: result };
 }
-export function documentFor(settings, shaderHash = 'unverified') {
+export function documentFor(settings: Settings, shaderHash = 'unverified'): Recipe {
   return { format: 'exo-visual', version: 1, engine: ENGINE, shaderHash, settings: validateSettings(settings) };
 }
-export function parseDocument(input) {
+export function parseDocument(input: unknown): Recipe {
   if (typeof input !== 'string') throw new Error('Project metadata must be text.');
   if (input.length > 65536) throw new Error('Project metadata is too large.');
-  const data = JSON.parse(input);
-  if (!data || data.format !== 'exo-visual' || data.version !== 1 || data.engine !== ENGINE) throw new Error('Unsupported project version.');
-  return { ...data, settings: validateSettings(data.settings) };
+  const data: unknown = JSON.parse(input);
+  if (!data || typeof data !== 'object') throw new Error('Unsupported project version.');
+  const value = data as Record<string, unknown>;
+  if (value.format !== 'exo-visual' || value.version !== 1 || value.engine !== ENGINE || typeof value.shaderHash !== 'string' || value.shaderHash.length > 128) throw new Error('Unsupported project version.');
+  return documentFor(validateSettings(value.settings), value.shaderHash);
 }
-export function nextSeed(seed) {
+export function nextSeed(seed: number): number {
   // Integer permutation, independent of wall time and Math.random().
   let x = (seed + 0x9e3779b9) >>> 0;
   x = Math.imul(x ^ (x >>> 16), 0x21f0aaad);
   x = Math.imul(x ^ (x >>> 15), 0x735a2d97);
   return (x ^ (x >>> 15)) & 0xffffff;
 }
-export function loopPhase(time, duration) { return ((time % duration) / duration) * Math.PI * 2; }
-export function validateExport(width, height) {
+export function loopPhase(time: number, duration: number): number { return ((time % duration) / duration) * Math.PI * 2; }
+export function validateExport(width: number, height: number): void {
   if (![width, height].every(Number.isSafeInteger) || width < 64 || height < 64 || width > 8192 || height > 8192 || width * height > 33554432) throw new Error('Use 64 to 8192 pixels per side, up to 33.5 megapixels.');
 }
-export function* exportTiles(width, height, tileSize = 1024, halo = 64) {
+export function* exportTiles(width: number, height: number, tileSize = 1024, halo = 64): Generator<ExportTile> {
   validateExport(width, height);
   if (!Number.isSafeInteger(tileSize) || tileSize < 32 || !Number.isSafeInteger(halo) || halo < 0 || halo > 1024) throw new Error('Invalid tile geometry.');
   for (let y = 0; y < height; y += tileSize) for (let x = 0; x < width; x += tileSize) {
@@ -95,12 +102,15 @@ export function* exportTiles(width, height, tileSize = 1024, halo = 64) {
   }
 }
 export class History {
-  constructor(settings) { this.past = []; this.future = []; this.current = structuredClone(settings); }
-  commit(settings) {
+  past: Settings[] = [];
+  future: Settings[] = [];
+  current: Settings;
+  constructor(settings: Settings) { this.past = []; this.future = []; this.current = structuredClone(settings); }
+  commit(settings: Settings) {
     if (JSON.stringify(this.current) === JSON.stringify(settings)) return;
     this.past.push(this.current); if (this.past.length > 80) this.past.shift();
     this.current = structuredClone(settings); this.future = [];
   }
-  undo() { if (!this.past.length) return structuredClone(this.current); this.future.push(this.current); this.current = this.past.pop(); return structuredClone(this.current); }
-  redo() { if (!this.future.length) return structuredClone(this.current); this.past.push(this.current); this.current = this.future.pop(); return structuredClone(this.current); }
+  undo() { if (!this.past.length) return structuredClone(this.current); this.future.push(this.current); this.current = this.past.pop()!; return structuredClone(this.current); }
+  redo() { if (!this.future.length) return structuredClone(this.current); this.past.push(this.current); this.current = this.future.pop()!; return structuredClone(this.current); }
 }

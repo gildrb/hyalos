@@ -1,10 +1,12 @@
+import type { Target } from 'vgpu';
+import type { Renderer, Settings, TileRegion, Quality } from '../types.ts';
 import { init, effect, frame, surface, target, sampler } from 'vgpu';
-import { SCENE_SHADER, POST_SHADER, shaderFingerprint } from './shaders.js';
-import { uniforms } from './uniforms.js';
-import { DEFAULT } from '../model.js';
+import { SCENE_SHADER, POST_SHADER, shaderFingerprint } from './shaders.ts';
+import { uniforms } from './uniforms.ts';
+import { DEFAULT } from '../model.ts';
 
 /** One vGPU context, persistent pipelines, reusable HDR targets. No WebGL fallback. */
-export async function createRenderer(canvas, onError = console.error) {
+export async function createRenderer(canvas: HTMLCanvasElement, onError: (error: unknown) => void = console.error): Promise<Renderer> {
   if (!globalThis.isSecureContext) throw new Error('WebGPU needs HTTPS or localhost. An HTTP Tailnet address is not sufficient.');
   if (!navigator.gpu) throw new Error('WebGPU is not available in this browser. Use a WebGPU-capable browser with hardware acceleration enabled.');
   const gpu = await init({ powerPreference: 'high-performance' });
@@ -20,9 +22,9 @@ export async function createRenderer(canvas, onError = console.error) {
     const scene = effect(gpu, SCENE_SHADER, { label: 'promethean-radiance', set: { u: initial } });
     // Bind the Target, not hdr.color: vGPU tracks replacement textures on resize.
     const post = effect(gpu, POST_SHADER, { label: 'optics-and-print', set: { u: initial, sceneTex: hdr, linearSampler } });
-    await Promise.all([scene.compile(hdr), post.compile(screen), post.compile(output)]);
+    await Promise.all([scene.compile(hdr), post.compile({ colors: [screen.format], sampleCount: 1 }), post.compile(output)]);
     const hash = await shaderFingerprint();
-    function draw(s, w, h, tile, destination, quality) {
+    function draw(s: Settings, w: number, h: number, tile: TileRegion, destination: Target, quality: Quality) {
       if (disposed) throw new Error('Renderer has been disposed.');
       if (tile.width > gpu.gpu.limits.maxTextureDimension2D || tile.height > gpu.gpu.limits.maxTextureDimension2D) throw new Error('Requested tile exceeds GPU texture limits.');
       hdr.resize([tile.width, tile.height]);

@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT, PRESETS, RANGES, preset, validateSettings, documentFor, parseDocument, nextSeed, loopPhase, validateExport, exportTiles, History } from '../src/model.js';
-import { oklchToLinear, gamutMap } from '../src/color.js';
-import { uniforms } from '../src/gpu/uniforms.js';
+import { DEFAULT, PRESETS, RANGES, preset, validateSettings, documentFor, parseDocument, nextSeed, loopPhase, validateExport, exportTiles, History } from '../src/model.ts';
+import { oklchToLinear, gamutMap } from '../src/color.ts';
+import { uniforms } from '../src/gpu/uniforms.ts';
 
 for (const p of PRESETS) test(`preset ${p.id}: complete, valid and independent`, () => {
   const a = preset(p.id), b = preset(p.id);
