@@ -1,6 +1,6 @@
-import { createRenderer } from '../src/gpu/renderer.js';
-import { preset } from '../src/model.js';
-import { renderPixels, exportStill } from '../src/export.js';
+import { createRenderer } from '../src/gpu/renderer.ts';
+import { preset } from '../src/model.ts';
+import { renderPixels, exportStill } from '../src/export.ts';
 const errors = [];
 window.gpuHarness = { errors, ready: false };
 try {

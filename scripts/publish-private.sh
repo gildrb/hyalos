@@ -17,7 +17,7 @@ fi
 if [[ -f package-lock.json ]]; then npm ci; else npm install; fi
 npm test
 npm run build
-# Browser verification needs a real WebGPU backend. Run npm run test:browser before release.
+# Run npm run test:browser for production UI/base paths and npm run test:gpu for real GPU qualification before release.
 git init -b main
 if ! git var GIT_AUTHOR_IDENT >/dev/null 2>&1; then
   user_id=$(gh api user --jq .id)
