@@ -2,6 +2,10 @@ import { test, expect } from '@playwright/test';
 import { readPngProject } from '../../src/binary.ts';
 import { parseDocument } from '../../src/model.ts';
 
+test.afterEach(async ({ page }) => {
+  await page.evaluate(() => window.gpuHarness?.renderer?.dispose()).catch(() => {});
+});
+
 test('actual vGPU compilation, deterministic pixels, tiling, presets, PNG metadata', async ({ page }) => {
   const errors=[];page.on('pageerror',e=>errors.push(String(e)));
   await page.goto('/tests/render.html');
@@ -22,20 +26,28 @@ test('actual vGPU compilation, deterministic pixels, tiling, presets, PNG metada
   const png=Uint8Array.from(await page.evaluate(()=>window.gpuHarness.png()));
   const doc=parseDocument(readPngProject(png));expect(doc.settings.seed).toBe(240915);expect(doc.shaderHash).toMatch(/^[a-f0-9]{64}$/);
   expect(new DataView(png.buffer).getUint32(16)).toBe(192);expect(new DataView(png.buffer).getUint32(20)).toBe(108);
+  await test.info().attach('the-gift-webgpu.png', { body: Buffer.from(png), contentType: 'image/png' });
   await page.evaluate(()=>window.gpuHarness.renderer.settled());
   expect(await page.evaluate(()=>window.gpuHarness.errors)).toEqual([]);expect(errors).toEqual([]);
 });
 
 test('editor controls, export and paused restore use the same live renderer', async ({ page }) => {
-  await page.goto('/');await page.waitForFunction(()=>!!window.hyalos);expect(await page.evaluate(()=>window.hyalos.ready)).toBe(true);
+  await page.goto('/');await page.waitForFunction(()=>!!window.hyalos);
+  const ready = await page.evaluate(()=>window.hyalos.ready);
+  expect(ready, await page.locator('#gpu-error').innerText()).toBe(true);
   await page.locator('[data-preset="commons"]').click();expect(await page.evaluate(()=>window.hyalos.getScene().settings.scene)).toBe(1);
   await page.locator('[data-tab="light"]').click();await page.locator('[data-value="power"]').fill('77');await page.locator('[data-value="power"]').press('Tab');
   expect(await page.evaluate(()=>window.hyalos.getScene().settings.power)).toBe(77);
   await page.locator('#undo').click();expect(await page.evaluate(()=>window.hyalos.getScene().settings.power)).not.toBe(77);
   await page.locator('#redo').click();expect(await page.evaluate(()=>window.hyalos.getScene().settings.power)).toBe(77);
+  const exported = await page.evaluate(async () => Array.from(new Uint8Array(await (await window.hyalos.exportPNG(192,108)).arrayBuffer())));
+  const recipe = parseDocument(readPngProject(Uint8Array.from(exported)));
+  expect(recipe.settings.power).toBe(77);
+  expect(recipe.settings.scene).toBe(1);
+  await test.info().attach('commons-editor-webgpu.png', { body: Buffer.from(exported), contentType: 'image/png' });
   await page.evaluate(()=>window.hyalos.setParameters({time:3.25}));await page.waitForTimeout(350);
-  await page.reload();await page.waitForFunction(()=>!!window.hyalos);expect(await page.evaluate(()=>window.hyalos.ready)).toBe(true);
+  await page.reload();await page.waitForFunction(()=>!!window.hyalos);
+  expect(await page.evaluate(()=>window.hyalos.ready), await page.locator('#gpu-error').innerText()).toBe(true);
   expect(await page.evaluate(()=>window.hyalos.getScene().settings.time)).toBe(3.25);
   await expect(page.locator('#play')).toHaveAttribute('aria-label','Play animation');
 });
-
