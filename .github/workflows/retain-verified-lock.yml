@@ -1,0 +1,38 @@
+name: Retain verified dependency lock
+on:
+  push:
+    branches: [fix/typescript-preact]
+    paths: [.github/workflows/retain-verified-lock.yml]
+permissions:
+  contents: read
+jobs:
+  retain:
+    if: github.repository == 'gildrb/exo-visuals' && github.ref == 'refs/heads/fix/typescript-preact'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: dependency-lock
+          run-id: 35749691816
+          github-token: ${{ github.token }}
+          path: .verified-lock
+      - name: Verify and retain only the previously tested lockfile
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '1bdde1004c64b50f6e34fa3b65da8e8abb4b0fb07e45c54b668e8527cfaefc0b  .verified-lock/package-lock.json' | sha256sum -c -
+          test ! -e package-lock.json
+          cp .verified-lock/package-lock.json package-lock.json
+          git add -- package-lock.json
+          test "$(git diff --cached --name-only)" = 'package-lock.json'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Lock dependencies verified by the first successful TypeScript and Preact build'
+          git push origin HEAD:refs/heads/fix/typescript-preact
