@@ -1,0 +1,532 @@
+TAP version 13
+# Subtest: CRC32 standard check value
+ok 1 - CRC32 standard check value
+  ---
+  duration_ms: 2.698244
+  type: 'test'
+  ...
+# Subtest: ZIP is deterministic and has valid CRCs, local headers and directory
+ok 2 - ZIP is deterministic and has valid CRCs, local headers and directory
+  ---
+  duration_ms: 6.911725
+  type: 'test'
+  ...
+# Subtest: unsafe archive filenames are rejected
+ok 3 - unsafe archive filenames are rejected
+  ---
+  duration_ms: 0.867743
+  type: 'test'
+  ...
+# Subtest: PNG recipe embed, recover, and replace metadata
+ok 4 - PNG recipe embed, recover, and replace metadata
+  ---
+  duration_ms: 1.775896
+  type: 'test'
+  ...
+# Subtest: PNG metadata checksum detects tampering
+ok 5 - PNG metadata checksum detects tampering
+  ---
+  duration_ms: 0.898611
+  type: 'test'
+  ...
+# Subtest: missing, oversized, invalid and truncated PNG metadata is rejected
+ok 6 - missing, oversized, invalid and truncated PNG metadata is rejected
+  ---
+  duration_ms: 2.671272
+  type: 'test'
+  ...
+# Subtest: export tiles assemble exact RGBA order without flips or seams
+ok 7 - export tiles assemble exact RGBA order without flips or seams
+  ---
+  duration_ms: 75.731544
+  type: 'test'
+  ...
+# Subtest: readback snapshots are not affected by edits during export
+ok 8 - readback snapshots are not affected by edits during export
+  ---
+  duration_ms: 17.109682
+  type: 'test'
+  ...
+# Subtest: pre-cancelled export performs no GPU work
+ok 9 - pre-cancelled export performs no GPU work
+  ---
+  duration_ms: 2.104837
+  type: 'test'
+  ...
+# Subtest: cancellation between readback and copy does not return partial export
+ok 10 - cancellation between readback and copy does not return partial export
+  ---
+  duration_ms: 0.6605
+  type: 'test'
+  ...
+# Subtest: invalid GPU readback is rejected
+ok 11 - invalid GPU readback is rejected
+  ---
+  duration_ms: 0.263848
+  type: 'test'
+  ...
+# Subtest: GPU allocation constraints fail before readback
+ok 12 - GPU allocation constraints fail before readback
+  ---
+  duration_ms: 0.134118
+  type: 'test'
+  ...
+# Subtest: sequence budgets and noninteger rates fail before encoding
+ok 13 - sequence budgets and noninteger rates fail before encoding
+  ---
+  duration_ms: 0.394551
+  type: 'test'
+  ...
+# Subtest: preset the-gift: complete, valid and independent
+ok 14 - preset the-gift: complete, valid and independent
+  ---
+  duration_ms: 6.312691
+  type: 'test'
+  ...
+# Subtest: preset commons: complete, valid and independent
+ok 15 - preset commons: complete, valid and independent
+  ---
+  duration_ms: 1.832704
+  type: 'test'
+  ...
+# Subtest: preset hearth: complete, valid and independent
+ok 16 - preset hearth: complete, valid and independent
+  ---
+  duration_ms: 1.170679
+  type: 'test'
+  ...
+# Subtest: preset relay: complete, valid and independent
+ok 17 - preset relay: complete, valid and independent
+  ---
+  duration_ms: 0.376737
+  type: 'test'
+  ...
+# Subtest: preset memory: complete, valid and independent
+ok 18 - preset memory: complete, valid and independent
+  ---
+  duration_ms: 0.463224
+  type: 'test'
+  ...
+# Subtest: preset ignition: complete, valid and independent
+ok 19 - preset ignition: complete, valid and independent
+  ---
+  duration_ms: 0.624642
+  type: 'test'
+  ...
+# Subtest: schema includes every numeric setting
+ok 20 - schema includes every numeric setting
+  ---
+  duration_ms: 0.542348
+  type: 'test'
+  ...
+# Subtest: project JSON round-trips exactly
+ok 21 - project JSON round-trips exactly
+  ---
+  duration_ms: 0.875263
+  type: 'test'
+  ...
+# Subtest: invalid settings rejected null
+ok 22 - invalid settings rejected null
+  ---
+  duration_ms: 0.712207
+  type: 'test'
+  ...
+# Subtest: invalid settings rejected []
+ok 23 - invalid settings rejected []
+  ---
+  duration_ms: 0.776215
+  type: 'test'
+  ...
+# Subtest: invalid settings rejected {}
+ok 24 - invalid settings rejected {}
+  ---
+  duration_ms: 0.393162
+  type: 'test'
+  ...
+# Subtest: invalid settings rejected ""
+ok 25 - invalid settings rejected ""
+  ---
+  duration_ms: 0.100066
+  type: 'test'
+  ...
+# Subtest: invalid settings rejected 1
+ok 26 - invalid settings rejected 1
+  ---
+  duration_ms: 0.068077
+  type: 'test'
+  ...
+# Subtest: invalid settings rejected {"seed":1.4,"scene":0,"finish":0,"rotation":38,"tw
+ok 27 - invalid settings rejected {"seed":1.4,"scene":0,"finish":0,"rotation":38,"tw
+  ---
+  duration_ms: 0.254619
+  type: 'test'
+  ...
+# Subtest: invalid settings rejected {"seed":240915,"scene":0,"finish":0,"rotation":38,
+ok 28 - invalid settings rejected {"seed":240915,"scene":0,"finish":0,"rotation":38,
+  ---
+  duration_ms: 0.104598
+  type: 'test'
+  ...
+# Subtest: invalid settings rejected {"seed":240915,"scene":0,"finish":0,"rotation":38,
+ok 29 - invalid settings rejected {"seed":240915,"scene":0,"finish":0,"rotation":38,
+  ---
+  duration_ms: 0.104741
+  type: 'test'
+  ...
+# Subtest: invalid settings rejected {"seed":240915,"scene":0,"finish":0,"rotation":38,
+ok 30 - invalid settings rejected {"seed":240915,"scene":0,"finish":0,"rotation":38,
+  ---
+  duration_ms: 0.07647
+  type: 'test'
+  ...
+# Subtest: invalid settings rejected {"seed":240915,"scene":0,"finish":0,"rotation":38,
+ok 31 - invalid settings rejected {"seed":240915,"scene":0,"finish":0,"rotation":38,
+  ---
+  duration_ms: 0.093893
+  type: 'test'
+  ...
+# Subtest: unknown properties cannot pollute restored settings
+ok 32 - unknown properties cannot pollute restored settings
+  ---
+  duration_ms: 0.454983
+  type: 'test'
+  ...
+# Subtest: parameter bounds: seed
+ok 33 - parameter bounds: seed
+  ---
+  duration_ms: 0.524395
+  type: 'test'
+  ...
+# Subtest: parameter bounds: scene
+ok 34 - parameter bounds: scene
+  ---
+  duration_ms: 0.249902
+  type: 'test'
+  ...
+# Subtest: parameter bounds: finish
+ok 35 - parameter bounds: finish
+  ---
+  duration_ms: 0.164236
+  type: 'test'
+  ...
+# Subtest: parameter bounds: rotation
+ok 36 - parameter bounds: rotation
+  ---
+  duration_ms: 0.116551
+  type: 'test'
+  ...
+# Subtest: parameter bounds: twist
+ok 37 - parameter bounds: twist
+  ---
+  duration_ms: 0.110308
+  type: 'test'
+  ...
+# Subtest: parameter bounds: spread
+ok 38 - parameter bounds: spread
+  ---
+  duration_ms: 0.355257
+  type: 'test'
+  ...
+# Subtest: parameter bounds: thickness
+ok 39 - parameter bounds: thickness
+  ---
+  duration_ms: 0.119244
+  type: 'test'
+  ...
+# Subtest: parameter bounds: zoom
+ok 40 - parameter bounds: zoom
+  ---
+  duration_ms: 0.104635
+  type: 'test'
+  ...
+# Subtest: parameter bounds: panX
+ok 41 - parameter bounds: panX
+  ---
+  duration_ms: 0.310998
+  type: 'test'
+  ...
+# Subtest: parameter bounds: panY
+ok 42 - parameter bounds: panY
+  ---
+  duration_ms: 0.50573
+  type: 'test'
+  ...
+# Subtest: parameter bounds: yaw
+ok 43 - parameter bounds: yaw
+  ---
+  duration_ms: 0.199986
+  type: 'test'
+  ...
+# Subtest: parameter bounds: pitch
+ok 44 - parameter bounds: pitch
+  ---
+  duration_ms: 0.171873
+  type: 'test'
+  ...
+# Subtest: parameter bounds: nodes
+ok 45 - parameter bounds: nodes
+  ---
+  duration_ms: 0.284148
+  type: 'test'
+  ...
+# Subtest: parameter bounds: roughness
+ok 46 - parameter bounds: roughness
+  ---
+  duration_ms: 0.194767
+  type: 'test'
+  ...
+# Subtest: parameter bounds: metallic
+ok 47 - parameter bounds: metallic
+  ---
+  duration_ms: 0.154538
+  type: 'test'
+  ...
+# Subtest: parameter bounds: detail
+ok 48 - parameter bounds: detail
+  ---
+  duration_ms: 0.366466
+  type: 'test'
+  ...
+# Subtest: parameter bounds: power
+ok 49 - parameter bounds: power
+  ---
+  duration_ms: 0.172052
+  type: 'test'
+  ...
+# Subtest: parameter bounds: radius
+ok 50 - parameter bounds: radius
+  ---
+  duration_ms: 0.219581
+  type: 'test'
+  ...
+# Subtest: parameter bounds: keyAngle
+ok 51 - parameter bounds: keyAngle
+  ---
+  duration_ms: 0.131193
+  type: 'test'
+  ...
+# Subtest: parameter bounds: fill
+ok 52 - parameter bounds: fill
+  ---
+  duration_ms: 0.185377
+  type: 'test'
+  ...
+# Subtest: parameter bounds: density
+ok 53 - parameter bounds: density
+  ---
+  duration_ms: 0.403342
+  type: 'test'
+  ...
+# Subtest: parameter bounds: anisotropy
+ok 54 - parameter bounds: anisotropy
+  ---
+  duration_ms: 0.582506
+  type: 'test'
+  ...
+# Subtest: parameter bounds: turbulence
+ok 55 - parameter bounds: turbulence
+  ---
+  duration_ms: 1.26509
+  type: 'test'
+  ...
+# Subtest: parameter bounds: exposure
+ok 56 - parameter bounds: exposure
+  ---
+  duration_ms: 0.143677
+  type: 'test'
+  ...
+# Subtest: parameter bounds: contrast
+ok 57 - parameter bounds: contrast
+  ---
+  duration_ms: 2.58923
+  type: 'test'
+  ...
+# Subtest: parameter bounds: bloom
+ok 58 - parameter bounds: bloom
+  ---
+  duration_ms: 0.223756
+  type: 'test'
+  ...
+# Subtest: parameter bounds: bloomRadius
+ok 59 - parameter bounds: bloomRadius
+  ---
+  duration_ms: 0.190285
+  type: 'test'
+  ...
+# Subtest: parameter bounds: grain
+ok 60 - parameter bounds: grain
+  ---
+  duration_ms: 0.134044
+  type: 'test'
+  ...
+# Subtest: parameter bounds: vignette
+ok 61 - parameter bounds: vignette
+  ---
+  duration_ms: 0.203068
+  type: 'test'
+  ...
+# Subtest: parameter bounds: spacing
+ok 62 - parameter bounds: spacing
+  ---
+  duration_ms: 0.120166
+  type: 'test'
+  ...
+# Subtest: parameter bounds: dotSize
+ok 63 - parameter bounds: dotSize
+  ---
+  duration_ms: 0.1179
+  type: 'test'
+  ...
+# Subtest: parameter bounds: dither
+ok 64 - parameter bounds: dither
+  ---
+  duration_ms: 0.30054
+  type: 'test'
+  ...
+# Subtest: parameter bounds: time
+ok 65 - parameter bounds: time
+  ---
+  duration_ms: 0.314583
+  type: 'test'
+  ...
+# Subtest: parameter bounds: duration
+ok 66 - parameter bounds: duration
+  ---
+  duration_ms: 0.169801
+  type: 'test'
+  ...
+# Subtest: recipe parser rejects unknown engine, version, null and oversized data
+ok 67 - recipe parser rejects unknown engine, version, null and oversized data
+  ---
+  duration_ms: 0.606076
+  type: 'test'
+  ...
+# Subtest: seed sequence is repeatable, non-constant and within exact f32 integer range
+ok 68 - seed sequence is repeatable, non-constant and within exact f32 integer range
+  ---
+  duration_ms: 1.212411
+  type: 'test'
+  ...
+# Subtest: explicit time makes animation periodic
+ok 69 - explicit time makes animation periodic
+  ---
+  duration_ms: 0.712611
+  type: 'test'
+  ...
+# Subtest: history is immutable and undo/redo keeps exact palette and time
+ok 70 - history is immutable and undo/redo keeps exact palette and time
+  ---
+  duration_ms: 0.702369
+  type: 'test'
+  ...
+# Subtest: history bounds retained operations
+ok 71 - history bounds retained operations
+  ---
+  duration_ms: 3.008908
+  type: 'test'
+  ...
+# Subtest: export allows 1920,1080
+ok 72 - export allows 1920,1080
+  ---
+  duration_ms: 0.130138
+  type: 'test'
+  ...
+# Subtest: export allows 3840,2160
+ok 73 - export allows 3840,2160
+  ---
+  duration_ms: 0.045046
+  type: 'test'
+  ...
+# Subtest: export allows 7680,4320
+ok 74 - export allows 7680,4320
+  ---
+  duration_ms: 0.034894
+  type: 'test'
+  ...
+# Subtest: export allows 8192,4096
+ok 75 - export allows 8192,4096
+  ---
+  duration_ms: 0.033508
+  type: 'test'
+  ...
+# Subtest: export allows 64,64
+ok 76 - export allows 64,64
+  ---
+  duration_ms: 0.083222
+  type: 'test'
+  ...
+# Subtest: export rejects 8192,8192
+ok 77 - export rejects 8192,8192
+  ---
+  duration_ms: 0.124127
+  type: 'test'
+  ...
+# Subtest: export rejects 0,1080
+ok 78 - export rejects 0,1080
+  ---
+  duration_ms: 0.1192
+  type: 'test'
+  ...
+# Subtest: export rejects 8193,64
+ok 79 - export rejects 8193,64
+  ---
+  duration_ms: 0.059156
+  type: 'test'
+  ...
+# Subtest: export rejects 1920.5,1080
+ok 80 - export rejects 1920.5,1080
+  ---
+  duration_ms: 0.045217
+  type: 'test'
+  ...
+# Subtest: export rejects Infinity,64
+ok 81 - export rejects Infinity,64
+  ---
+  duration_ms: 0.043441
+  type: 'test'
+  ...
+# Subtest: export rejects 64,NaN
+ok 82 - export rejects 64,NaN
+  ---
+  duration_ms: 0.045437
+  type: 'test'
+  ...
+# Subtest: tiles cover every pixel once and include optical halo
+ok 83 - tiles cover every pixel once and include optical halo
+  ---
+  duration_ms: 4.58008
+  type: 'test'
+  ...
+# Subtest: invalid tiling inputs fail explicitly
+ok 84 - invalid tiling inputs fail explicitly
+  ---
+  duration_ms: 0.201722
+  type: 'test'
+  ...
+# Subtest: OKLCH conversion black, white, neutral and hue periodicity
+ok 85 - OKLCH conversion black, white, neutral and hue periodicity
+  ---
+  duration_ms: 0.60148
+  type: 'test'
+  ...
+# Subtest: chroma reduction maps authored colors into display gamut
+ok 86 - chroma reduction maps authored colors into display gamut
+  ---
+  duration_ms: 6.252905
+  type: 'test'
+  ...
+# Subtest: uniform packing matches 16 vec4 slots and remains independent
+ok 87 - uniform packing matches 16 vec4 slots and remains independent
+  ---
+  duration_ms: 1.371985
+  type: 'test'
+  ...
+1..87
+# tests 87
+# suites 0
+# pass 87
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 252.697481

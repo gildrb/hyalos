@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="oklch(0.15 0.004 260)" />
+  <meta name="description" content="A local, deterministic visual laboratory. Physically based light, abstract forms, and a fire held in common." />
+  <title>hyalos / visual laboratory</title>
+  <link rel="icon" href="/mark.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="Hyalos visual laboratory"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 24 25 6M7 6l18 18M6 16h20" /></svg><strong>hyalos</strong><span class="brand-divider"></span><span>visual laboratory</span></a>
+    <div class="header-centre"><span class="small-dot"></span> PROMETHEAN STUDIES <span class="muted">/ 001</span></div>
+    <div class="header-actions"><span class="privacy">ON DEVICE</span><button id="open-project" class="text-button">Open recipe</button><button id="open-export" class="primary">Export <span aria-hidden="true">↗</span></button></div>
+  </header>
+  <div class="mobile-toolbar"><button data-panel="presets">Studies</button><button data-panel="inspector">Parameters</button></div>
+  <main class="workspace" id="workspace">
+    <aside class="library" aria-label="Study library">
+      <div class="panel-header"><span>Studies</span><span class="counter">06</span></div>
+      <p class="library-intro">An intelligence of our own.</p>
+      <div id="presets" class="preset-list"></div>
+      <div class="library-bottom"><button id="save-recipe" class="outline-button">Save this variation <span>↓</span></button><p>Seeded. Adjustable. Yours.<br>No uploads. No generated stock.</p></div>
+    </aside>
+    <section class="studio" aria-label="Visual canvas">
+      <div class="canvas-toolbar"><span class="breadcrumb">STUDY <span id="study-number">01</span> <i>/</i> <strong id="study-title">The gift</strong><span id="modified" hidden>Modified</span></span><div class="canvas-tools"><button id="undo" title="Undo (⌘/Ctrl Z)" aria-label="Undo">↶</button><button id="redo" title="Redo (⌘/Ctrl Shift Z)" aria-label="Redo">↷</button><span class="separator"></span><button id="reset" class="text-button">Reset</button><button id="fullscreen" title="Toggle fullscreen" aria-label="Toggle fullscreen">⛶</button></div></div>
+      <div class="stage-wrap" id="stage-wrap">
+        <div class="stage" id="stage">
+          <img id="poster" src="/presets/the-gift.png" alt="Reference study: a sculptural crescent and light passing between independent forms." />
+          <canvas id="canvas" aria-label="Interactive procedural study. Drag to position; control-scroll to zoom." tabindex="0"></canvas>
+          <div class="canvas-loading" id="loading"><span class="loader"></span><span>Preparing light transport</span></div>
+          <div class="canvas-error" id="gpu-error" hidden><span class="eyebrow">RENDERER UNAVAILABLE</span><strong id="gpu-error-title">WebGPU could not start</strong><p id="gpu-error-message"></p><button id="retry" class="outline-button">Reconnect</button><small>The background is a reference preview, not a live render.</small></div>
+        </div>
+      </div>
+      <div class="stage-caption"><span id="concept">Knowledge, carried into reach.</span><span class="caption-right">DRAG TO COMPOSE <span>·</span> CTRL + SCROLL TO ZOOM</span></div>
+      <div class="transport"><button id="play" class="play-button" aria-label="Play animation" disabled>▶</button><span id="time-display" class="timecode">00.000</span><input id="scrub" aria-label="Animation time" type="range" min="0" max="12" step="0.001" value="0" /><span id="duration-display" class="timecode muted">12.000 s</span><button id="loop-length" class="loop-button" title="Set loop duration">↻ <span id="loop-label">12s</span></button></div>
+      <div class="studio-bottom"><span><span class="status-dot" id="gpu-dot"></span><span id="gpu-label">CONNECTING</span><span class="divider">/</span><span id="resolution-label">640 × 360</span></span><span id="cadence">PAUSED</span><label class="quality-selector">Preview <select id="quality"><option value="draft">Draft</option><option value="balanced" selected>Balanced</option><option value="final">Final</option></select></label></div>
+    </section>
+    <aside class="inspector" aria-label="Shader parameters">
+      <div class="panel-header"><span>Parameters</span><span class="local-tag" id="inspector-state">LOCAL</span></div>
+      <div class="inspector-tabs" role="tablist" aria-label="Parameter group"><button role="tab" data-tab="form" aria-selected="true">Form</button><button role="tab" data-tab="light" aria-selected="false">Light</button><button role="tab" data-tab="finish" aria-selected="false">Finish</button></div>
+      <div id="controls" class="controls"></div>
+      <div class="inspector-footer"><span class="small-dot"></span><span>OKLCH IN · LINEAR LIGHT OUT</span><button id="about" aria-label="Rendering and license information">ⓘ</button></div>
+    </aside>
+  </main>
+  <footer class="footer"><span>A FIRE HELD IN COMMON.</span><span id="shader-version">HYALOS VISUAL SYSTEM / V1</span><button id="copy-link" class="text-button">Copy scene link ↗</button></footer>
+  <input id="project-file" type="file" accept=".json,.png,application/json,image/png" hidden />
+  <div id="toast" class="toast" role="status" hidden></div>
+  <dialog id="export-dialog" aria-labelledby="export-heading">
+    <form id="export-form">
+      <div class="dialog-heading"><div><span class="eyebrow">TAKE IT WITH YOU</span><h1 id="export-heading">Export the study.</h1></div><button type="button" id="close-export" class="close-button" aria-label="Close export">×</button></div>
+      <p class="dialog-copy">The visual only. No interface, no watermark.<br>PNG files carry their recipe inside.</p>
+      <label class="field">Format<select id="export-format"><option value="image/png">PNG · image + embedded recipe</option><option value="image/webp">WebP + recipe · ZIP</option><option value="image/jpeg">JPEG + recipe · ZIP</option><option value="sequence">PNG sequence · ZIP</option><option value="project">Recipe · JSON</option></select></label>
+      <label class="field">Dimensions<select id="export-size"><option value="1920,1080">Landscape · 1920 × 1080</option><option value="3840,2160">4K · 3840 × 2160</option><option value="7680,4320">8K · 7680 × 4320</option><option value="2048,2048">Square · 2048 × 2048</option><option value="1080,1920">Portrait · 1080 × 1920</option><option value="1500,500">Social header · 1500 × 500</option><option value="custom">Custom</option></select></label>
+      <div class="field-row" id="custom-size" hidden><label class="field">Width<input id="export-width" type="number" min="64" max="8192" value="1920" required /></label><label class="field">Height<input id="export-height" type="number" min="64" max="8192" value="1080" required /></label></div>
+      <div class="field-row" id="sequence-options" hidden><label class="field">Frames per second<input id="export-fps" type="number" min="1" max="60" value="24" required /></label><label class="field">Seconds<input id="export-seconds" type="number" min="1" max="60" value="5" required /></label></div>
+      <p class="export-note" id="export-note">Final-quality light transport. Tiled readback keeps GPU memory bounded.</p>
+      <div class="export-progress" id="export-progress" hidden><progress id="progress" max="1" value="0"></progress><span id="progress-label">Rendering</span></div>
+      <p id="export-error" class="error-text" role="alert" hidden></p>
+      <div class="dialog-actions"><span id="export-summary">1920 × 1080 / sRGB</span><button type="button" id="cancel-render" class="outline-button" hidden>Cancel render</button><button type="submit" id="export-submit" class="primary">Export PNG ↗</button></div>
+    </form>
+  </dialog>
+  <dialog id="about-dialog" aria-labelledby="about-heading"><div class="dialog-heading"><div><span class="eyebrow">THE RENDERER</span><h1 id="about-heading">Light, not a filter.</h1></div><button id="close-about" class="close-button" aria-label="Close information">×</button></div><p>WGSL runs through vGPU directly on WebGPU. Signed-distance geometry is lit with GGX microfacet shading, inverse-square sources, visibility rays, and single-scattering volume integration.</p><p>These are real-time approximations. Geometry and its looping deformation are authored, not a physics simulation. There is no path tracing, indirect bounce lighting, or simulated combustion.</p><p>Colors are authored and saved exclusively in OKLCH. They are gamut-mapped into linear radiance for lighting, then display-encoded once. PNG output is sRGB.</p><p>A seed, recipe, shader revision, output resolution, quality, and exact time reproduce a study on the same renderer. Different GPUs can differ by small floating-point and antialiasing amounts.</p><p>MIT ports: Ashima simplex noise and Hugh Kennedy's ordered dithering. Attribution and source hashes are in THIRD_PARTY_NOTICES.md.</p><small id="about-hash"></small></dialog>
+  <script type="module" src="/src/main.js"></script>
+</body></html>
