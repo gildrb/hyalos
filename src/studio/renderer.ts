@@ -10,7 +10,7 @@ import { validateExport } from '../model.ts';
 import { renderSculpturePixels } from './export.ts';
 import { encodePixels } from '../export.ts';
 import sculpture from './sculpture.wgsl?raw';
-import extract from '../../glass-sculpture/bloom-extract.wgsl?raw';
+import extract from './bloom-extract.wgsl?raw';
 import blur from '../../glass-sculpture/bloom-blur.wgsl?raw';
 import present from './present.wgsl?raw';
 
@@ -75,7 +75,7 @@ export function createSculptureRenderer(canvas: HTMLCanvasElement, initial = ini
       try {
         const dt = Math.max(0, Math.min(now - previousFrame, 0.1));
         previousFrame = now;
-        input!.advance(dt);
+        input!.advance(dt,controls.lightMotion);
         if (controls.spin) state.sculptureTime += dt;
         state.clockTime += dt;
         activeScene!.render(currentFrame, output, input!.camera, controls, { ...state, deltaTime: dt, light: input!.light });

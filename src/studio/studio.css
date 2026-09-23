@@ -48,3 +48,11 @@
 .glass-environment-presets { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px; margin: 12px 0; }
 .glass-environment-presets .text-button { padding: 8px 4px; border: 1px solid #343434; border-radius: 5px; background: #202020; text-align: center; }
 .glass-environment-presets .text-button:hover { background: #303030; }
+.glass-surface { display: flex; flex-direction: column; gap: 18px; }
+.glass-surface > :not(summary) { margin-top: 16px; }
+.glass-inspector { overscroll-behavior: contain; scroll-padding-top: 72px; }
+.glass-editor :is(button,a,input,select,summary,canvas):focus-visible { outline: 2px solid #e6e6e6; outline-offset: 3px; }
+.glass-editor button { touch-action: manipulation; }
+.glass-range output { font-variant-numeric: tabular-nums; }
+.glass-skip { position: fixed; left: 16px; top: -80px; z-index: 100; padding: 12px 16px; background: #fff; color: #111; }
+.glass-skip:focus { top: 12px; }

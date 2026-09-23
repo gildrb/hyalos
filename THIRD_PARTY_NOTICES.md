@@ -34,7 +34,7 @@ Prime Intellect's [ivory point-field composition](https://x.com/PrimeIntellect/s
 
 Complete nine-file source retained under `glass-sculpture/`, pulled and verified by the official CLI. Source: https://vgpu.sh/examples/glass-sculpture. Concept and visual design by Kazuyuki Chinda (@ckazu). vGPU is MIT, Copyright (c) 2025 Vercel, Inc.; see `LICENSES/vgpu.txt`. Exact revision and aggregate SHA-256: `glass-sculpture/PROVENANCE.json`.
 
-`src/studio/scene.ts`, `pointer-input.ts`, `controls.ts`, `sculpture.wgsl` and `present.wgsl` are marked adaptations. The original three shapes and their optical branches remain; Hyalos adds twelve shapes, custom lighting and tint controls, macro zoom and configurable finishing. Bloom extraction/blur and camera helpers are imported directly from the unchanged example. The React/lil-gui wrappers are replaced with the existing Preact UI, automatic lifecycle cleanup, bounded live preview and recipe/PNG export.
+`src/studio/scene.ts`, `pointer-input.ts`, `controls.ts`, `sculpture.wgsl` and `present.wgsl` are marked adaptations. The original three shapes and their optical branches remain; Hyalos adds twelve shapes, custom lighting and tint controls, macro zoom and configurable finishing. Blur and camera helpers are imported directly from the unchanged example; Hyalos now supplies a soft-knee extraction shader and a second blur scale. The React/lil-gui wrappers are replaced with the existing Preact UI, automatic lifecycle cleanup, bounded live preview and recipe/PNG export.
 
 ## Complete shadercn orb library
 

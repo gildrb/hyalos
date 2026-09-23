@@ -19,9 +19,9 @@ export async function renderSculpturePixels(
     scene = createScene(gpu, output, controls, recipe.orbSnapshot, 1024);
     await scene.prepare(output);
     const pixels = new Uint8ClampedArray(width * height * 4);
-    // Maximum blur support: 4 taps * 1.5 * 3 spread * 4 downsample = 72 pixels.
-    // The extra margin covers extraction and edge antialiasing.
-    const tileSize = 512, halo = 96;
+    // Core + wide separable blur support is 72 full-resolution pixels per spread unit.
+    // Round to a multiple of four so downsample grids stay aligned between tiles.
+    const tileSize = 512, halo = Math.ceil((72*controls.glowRadius+8)/4)*4;
     const total = Math.ceil(width / tileSize) * Math.ceil(height / tileSize);
     let completed = 0;
     for (let y = 0; y < height; y += tileSize) {

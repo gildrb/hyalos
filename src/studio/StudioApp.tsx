@@ -14,9 +14,12 @@ export function StudioApp() {
   const canvas = useRef<HTMLCanvasElement>(null), fileInput = useRef<HTMLInputElement>(null), renderer = useRef<SculptureRenderer>();
   const initial = useRef<SculptureRecipe>();
   if (!initial.current) {
-    try { const saved = localStorage.getItem(STUDIO_STORAGE); initial.current = saved ? parseSculpture(saved) : initialSculpture(); }
+    try { const saved = localStorage.getItem(STUDIO_STORAGE); initial.current = saved ? parseSculpture(saved) : initialSculpture(); if(!saved && window.matchMedia('(prefers-reduced-motion: reduce)').matches){initial.current.controls.spin=false;initial.current.controls.orbAnimate=false;} }
     catch { initial.current = initialSculpture(); }
   }
+  const beforeReset = useRef<SculptureRecipe>();
+  const [canUndoReset, setCanUndoReset] = useState(false);
+  const [galleryOpen, setGalleryOpen] = useState(false);
   const [controls, setControls] = useState(initial.current.controls);
   const selectedOrb=ORB_CATALOG.find(item=>item.key===controls.orb);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -39,10 +42,11 @@ export function StudioApp() {
     return () => { cancelled = true; window.clearInterval(saveTimer); window.removeEventListener('pagehide', save); save(); try { renderer.current?.dispose(); } catch (error) { console.error(error); } renderer.current = undefined; };
   }, [connection]);
   const update = (patch: Partial<SculptureControls>) => {
+    setCanUndoReset(false);
     const next = normalizeControls({ ...controls, ...patch });
     setControls(next); renderer.current?.setControls(next);
     if (renderer.current) { initial.current = renderer.current.snapshot(); persist(initial.current); }
-    else initial.current = { ...initial.current!, controls: next };
+    else { initial.current = { ...initial.current!, controls: next }; persist(initial.current); }
   };
   const setOrbValue = (key: string, value: number | string) => {
     const stored=controls.orbValues[controls.orb] ?? {};
@@ -55,11 +59,26 @@ export function StudioApp() {
     const next = { ...current, camera: initialSculpture().camera };
     initial.current = next; renderer.current?.restore(next); persist(next);
   };
+  const restoreAll = (recipe: SculptureRecipe) => {
+    initial.current = structuredClone(recipe);
+    setControls(initial.current.controls);
+    renderer.current?.restore(initial.current);
+    persist(initial.current);
+  };
+  const resetAll = () => {
+    beforeReset.current = renderer.current?.snapshot() ?? structuredClone(initial.current!);
+    restoreAll(initialSculpture());
+    setCanUndoReset(true);
+    setNotice('All settings restored to defaults.');
+  };
   return <div class="editor glass-editor">
+    <a class="glass-skip" href="#sculpture-controls">Skip to sculpture controls</a>
     <header class="topbar">
       <a class="brand" href="./">Hyalos</a>
       <span class="glass-workspace-name">Glass Sculptures</span>
       <div class="header-actions">
+        <button class="text-button" disabled={saving} title="Reset scene, camera, colors, materials, effects and export size" onClick={resetAll}>Reset all</button>
+        {canUndoReset && <button class="text-button" disabled={saving} onClick={()=>{if(beforeReset.current)restoreAll(beforeReset.current);setCanUndoReset(false);setNotice('Previous scene restored.');}}>Undo reset</button>}
         <button class="text-button" disabled={saving} onClick={() => fileInput.current?.click()}>Open recipe</button>
         <button class="text-button" onClick={() => { const recipe = renderer.current?.snapshot() ?? initial.current!; download(new Blob([JSON.stringify(recipe, null, 2)], { type: 'application/json' }), `hyalos-glass-${controls.shape}.hyalos.json`); setNotice('Recipe saved.'); }}>Save recipe</button>
         {saving && <button class="text-button" onClick={() => renderer.current?.cancelExport()}>Cancel export</button>}
@@ -75,14 +94,14 @@ export function StudioApp() {
       <section class="glass-view" aria-label="Glass sculpture canvas">
         <div class="glass-view-toolbar"><span><strong>{label(controls.shape)}</strong><span class="glass-view-subtitle"> / {label(controls.glass)} glass</span></span><span class="glass-live" role="status">{status === 'ready' ? 'Live · WebGPU' : status === 'loading' ? 'Preparing WebGPU…' : 'Renderer unavailable'}</span></div>
         <div class="glass-canvas-host"><div class="glass-canvas-wrap" style={{ '--ratio': controls.exportWidth / controls.exportHeight }}>
-          <canvas ref={canvas} class="glass-canvas" aria-label="Interactive Glass Sculpture. Drag to orbit, scroll to zoom, move pointer to steer the light." />
+          <canvas ref={canvas} tabIndex={0} aria-describedby="canvas-help" class="glass-canvas" aria-label="Interactive Glass Sculpture. Drag or use arrow keys to orbit. Scroll or use plus and minus to zoom." />
           {status === 'loading' && <div class="glass-message" role="status">Preparing the Glass Sculpture renderer…</div>}
           {status === 'error' && <div class="glass-message" role="alert"><strong>Rendering unavailable</strong><p>{error}</p><button class="outline-button" onClick={() => setConnection(n => n + 1)}>Reconnect</button></div>}
         </div>
         </div>
-        <div class="glass-canvas-footer"><span>Drag to orbit · Scroll for macro zoom · Move pointer to light</span><button class="text-button" disabled={saving} onClick={reset}>Reset view</button></div>
+        <div class="glass-canvas-footer"><span id="canvas-help">Drag or use arrow keys to orbit · Scroll or +/− to zoom</span><button class="text-button" disabled={saving} onClick={reset}>Reset view</button></div>
       </section>
-      <aside class="glass-inspector" aria-label="Sculpture controls">
+      <aside id="sculpture-controls" tabIndex={-1} class="glass-inspector" aria-label="Sculpture controls">
         <div class="panel-header">Sculpture</div>
         <fieldset disabled={saving} class="glass-fields">
           <label class="glass-field">Shape<select aria-label="Shape" value={controls.shape} onChange={e => choose(e.currentTarget.value as SculptureControls['shape'])}>{SHAPES.map(s => <option key={s} value={s}>{label(s)}</option>)}</select></label>
@@ -93,7 +112,7 @@ export function StudioApp() {
               <option value="none">Glass · no orb shader</option>
               {ORB_CATALOG.map(orb=><option key={orb.key} value={orb.key}>{orb.label} · {orb.note}</option>)}
             </select></label>
-            <details class="orb-gallery"><summary>Browse all 33 orbs</summary><div class="orb-gallery-grid">{ORB_CATALOG.map(orb=><button key={orb.key} type="button" title={orb.note} aria-label={`Apply ${orb.label}`} aria-pressed={controls.orb===orb.key} onClick={()=>update({orb:orb.key})}><img src={ORB_PREVIEWS[orb.key]} loading="lazy" alt=""/><span>{orb.label}</span></button>)}</div></details>
+            <details class="orb-gallery" onToggle={e=>setGalleryOpen(e.currentTarget.open)}><summary>Browse all 33 orbs</summary><div class="orb-gallery-grid">{galleryOpen && ORB_CATALOG.map(orb=><button key={orb.key} type="button" title={orb.note} aria-label={`Apply ${orb.label}`} aria-pressed={controls.orb===orb.key} onClick={()=>update({orb:orb.key})}><img src={ORB_PREVIEWS[orb.key]} loading="lazy" decoding="async" width="192" height="192" alt=""/><span>{orb.label}</span></button>)}</div></details>
             {selectedOrb && <>
               <p class="glass-help">{selectedOrb.note}</p>
               <label class="glass-field">Apply as<select aria-label="Orb application" value={controls.orbMode} onChange={e=>update({orbMode:e.currentTarget.value as SculptureControls['orbMode']})}><option value="surface">Surface material</option><option value="emission">Emissive layer</option><option value="reflection">Reflected environment</option></select></label>
@@ -114,10 +133,22 @@ export function StudioApp() {
               <a class="glass-orb-credit" href="https://www.shadercn.run/" target="_blank" rel="noreferrer">shadercn · XorDev · non-commercial ↗</a>
             </>}
           </details>
+          <details class="glass-surface" open><summary>Surface &amp; quality</summary>
+            <div class="glass-environment-presets">
+              <button class="text-button" onClick={()=>update({metalness:0,roughness:0.08,dispersionAmount:0.002})}>Glass</button>
+              <button class="text-button" onClick={()=>update({metalness:0.65,roughness:0.18,dispersionAmount:0.002})}>Polished</button>
+              <button class="text-button" onClick={()=>update({metalness:1,roughness:0.28})}>Chrome</button>
+            </div>
+            <label class="glass-field">Spatial sampling<select aria-label="Spatial sampling" value={controls.samples} onChange={e=>update({samples:Number(e.currentTarget.value) as 1|4})}><option value="1">Interactive · 1 ray per pixel</option><option value="4">Refined · 4 rays per pixel</option></select></label>
+            {([{key:'roughness',label:'Surface roughness',min:0,max:0.7,step:0.01},{key:'edgeSoftness',label:'Model edge softness',min:0.001,max:0.15,step:0.001},{key:'dispersionAmount',label:'Dispersion amount',min:0,max:0.02,step:0.0005}] as const).map(field=><label class="glass-range" key={field.key}><span>{field.label}<output>{controls[field.key].toFixed(3)}</output></span><input aria-label={field.label} type="range" min={field.min} max={field.max} step={field.step} value={controls[field.key]} disabled={(field.key==='edgeSoftness' && !['gyroid','schwarz','prism','helix','vesper'].includes(controls.shape)) || (field.key==='dispersionAmount' && !controls.dispersion)} onInput={e=>update({[field.key]:Number(e.currentTarget.value)})}/></label>)}
+            <label class="glass-finish-enable"><span>Reflective floor</span><input aria-label="Reflective floor" type="checkbox" checked={controls.floor} onChange={e=>update({floor:e.currentTarget.checked})}/></label>
+            <p class="glass-help">Refined sampling smooths silhouettes and small highlights. Edge softness rounds intersecting surfaces; it applies to Gyroid, Schwarz, Prism, Helix and Vesper.</p>
+          </details>
           <label class="glass-field">Glass<select aria-label="Glass" value={controls.glass} onChange={e => update({ glass: e.currentTarget.value as SculptureControls['glass'] })}>{GLASS_TINTS.map(g => <option key={g} value={g}>{label(g)}</option>)}</select></label>
           <label class="glass-orb-color">Custom glass color<input aria-label="Custom glass color" type="color" value={controls.glassColor} onInput={e=>update({glass:'custom',glassColor:e.currentTarget.value})}/></label>
           <label class="glass-range"><span>Tint density<output>{controls.tintDensity.toFixed(2)}</output></span><input aria-label="Tint density" disabled={controls.glass==='clear'} type="range" min="0" max="4" step="0.01" value={controls.tintDensity} onInput={e=>update({tintDensity:Number(e.currentTarget.value)})}/></label>
           <label class="glass-field">Light rig<select aria-label="Light rig" value={controls.light} onChange={e => update({ light: e.currentTarget.value as SculptureControls['light'] })}>{LIGHT_RIG_NAMES.map(l => <option key={l} value={l}>{label(l)}</option>)}</select></label>
+          <label class="glass-field">Light movement<select aria-label="Light movement" value={controls.lightMotion} onChange={e=>update({lightMotion:e.currentTarget.value as SculptureControls['lightMotion']})}><option value="fixed">Fixed studio lights</option><option value="pointer">Follow pointer</option><option value="drift">Slow drift</option></select></label>
           <details class="glass-custom-colors" open><summary>Environment colors</summary>
             <div class="glass-environment-presets">{[
               {name:'Neutral',color:'#ffffff',sky:'#242424',ground:'#050505'},
@@ -155,7 +186,8 @@ export function StudioApp() {
               <span>{finishLabels[key]}<output>{controls[key].toFixed(key === 'grain' ? 3 : 2)}</output></span>
               <input aria-label={finishLabels[key]} type="range" min={FINISH_RANGES[key][0]} max={FINISH_RANGES[key][1]} step={FINISH_RANGES[key][2]} value={controls[key]} disabled={!controls.effects && key !== 'metalness' && key !== 'exposure'} onInput={e => update({ [key]: Number(e.currentTarget.value) })} />
             </label>)}
-            <button class="text-button" onClick={() => update(Object.fromEntries(Object.keys(FINISH_RANGES).map(key => [key, DEFAULT_CONTROLS[key as FinishControl]])))}>Reset finish</button>
+            {([{key:'bloomThreshold',label:'Bloom threshold',min:0,max:5,step:0.05},{key:'bloomKnee',label:'Bloom softness',min:0.01,max:1,step:0.01}] as const).map(field=><label class="glass-range" key={field.key}><span>{field.label}<output>{controls[field.key].toFixed(2)}</output></span><input aria-label={field.label} disabled={!controls.effects} type="range" min={field.min} max={field.max} step={field.step} value={controls[field.key]} onInput={e=>update({[field.key]:Number(e.currentTarget.value)})}/></label>)}
+            <button class="text-button" onClick={() => update({...Object.fromEntries(Object.keys(FINISH_RANGES).map(key => [key, DEFAULT_CONTROLS[key as FinishControl]])),bloomThreshold:DEFAULT_CONTROLS.bloomThreshold,bloomKnee:DEFAULT_CONTROLS.bloomKnee})}>Reset finish</button>
           </details>
           <p class="glass-help">Every control updates the live render. Lower the render scale for faster interaction; PNG export uses the dimensions above at full render scale.</p>
         </fieldset>

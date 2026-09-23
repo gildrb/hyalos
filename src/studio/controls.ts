@@ -34,7 +34,15 @@ export interface SculptureControls {
   keyPower: number;
   rimPower: number;
   light: LightRigName;
+  lightMotion: 'fixed' | 'pointer' | 'drift';
   dispersion: boolean;
+  dispersionAmount: number;
+  roughness: number;
+  edgeSoftness: number;
+  samples: 1 | 4;
+  floor: boolean;
+  bloomThreshold: number;
+  bloomKnee: number;
   spin: boolean;
   renderScale: RenderScale;
   effects: boolean;
@@ -58,12 +66,12 @@ export const DEFAULT_CONTROLS: SculptureControls = {
   shape: 'gyroid',
   glass: 'clear', glassColor: '#82baff', tintDensity: 1.1, keyColor: '#ffffff', rimColor: '#ffffff', skyColor: '#242424', groundColor: '#050505', keyPower: 16, rimPower: 9,
   atmosphereColor: '#ffffff', reflectionColor: '#ffffff', gradeColor: '#ffffff', environmentPower: 1, reflectionPower: 1,
-  light: 'custom',
-  dispersion: true,
+  light: 'custom', lightMotion: 'fixed',
+  dispersion: true, dispersionAmount: 0.002, roughness: 0.16, edgeSoftness: 0.045, samples: 4, floor: false, bloomThreshold: 1.2, bloomKnee: 0.65,
   spin: true,
   renderScale: 0.75,
-  effects: true, visibleLights: false, antialias: true, exportWidth: 1920, exportHeight: 1080, bloom: 0.45, glowRadius: 1, grain: 0.012,
-  texture: 0, coolness: 0, atmosphere: 0, metalness: 0, exposure: 1.05,
+  effects: true, visibleLights: false, antialias: true, exportWidth: 1920, exportHeight: 1080, bloom: 0.3, glowRadius: 1, grain: 0.004,
+  texture: 0, coolness: 0, atmosphere: 0, metalness: 0.55, exposure: 1.05,
 };
 
 export const FINISH_RANGES = {
@@ -111,8 +119,16 @@ export function normalizeControls(controls: Readonly<SculptureControls>): Sculpt
     reflectionPower: finite(controls.reflectionPower,1,0,3),
     keyPower: finite(controls.keyPower,16,0,30), rimPower: finite(controls.rimPower,9,0,30),
     glass: GLASS_TINTS.includes(controls.glass) ? controls.glass : DEFAULT_CONTROLS.glass,
+    lightMotion: ['fixed','pointer','drift'].includes(controls.lightMotion) ? controls.lightMotion : 'fixed',
     light: LIGHT_RIG_NAMES.includes(controls.light) ? controls.light : DEFAULT_CONTROLS.light,
     dispersion: controls.dispersion === true,
+    dispersionAmount: finite(controls.dispersionAmount,0.002,0,0.02),
+    roughness: finite(controls.roughness,0.16,0,0.7),
+    edgeSoftness: finite(controls.edgeSoftness,0.045,0.001,0.15),
+    samples: controls.samples === 1 ? 1 : 4,
+    floor: controls.floor === true,
+    bloomThreshold: finite(controls.bloomThreshold,1.2,0,5),
+    bloomKnee: finite(controls.bloomKnee,0.65,0.01,1),
     spin: controls.spin !== false,
     renderScale: RENDER_SCALES.includes(controls.renderScale)
       ? controls.renderScale

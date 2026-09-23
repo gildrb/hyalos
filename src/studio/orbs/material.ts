@@ -12,6 +12,7 @@ export function createOrbMaterial(gpu: Gpu, initial?: OrbSnapshot, resolution = 
   const scenes = new Map<string,OrbScene>();
   let active: string | undefined;
   let destroyed=false;
+  let textureKey: string | undefined;
   let saved=initial;
   const drive = (controls:SculptureControls) => ({state:controls.orbState,paused:!controls.orbAnimate,params:controls.orbValues[controls.orb]?.params,colors:controls.orbValues[controls.orb]?.colors});
   async function prepare(controls:SculptureControls) {
@@ -24,7 +25,7 @@ export function createOrbMaterial(gpu: Gpu, initial?: OrbSnapshot, resolution = 
     scenes.set(controls.orb,scene);
     if(saved?.key===controls.orb) { scene.restore(saved); scene.resize(output.size); saved=undefined; }
     const compilation=scene.shader.compile(output); pending.set(controls.orb,compilation);
-    try { await compilation; } catch(error) { scenes.delete(controls.orb);scene.dispose();throw error; } finally { pending.delete(controls.orb); }
+    try { await compilation; } catch(error) { if(scenes.get(controls.orb)===scene)scenes.delete(controls.orb);scene.dispose();throw error; } finally { if(pending.get(controls.orb)===compilation)pending.delete(controls.orb); }
   }
   return {
     output, sampler:linear, prepare,
@@ -33,11 +34,22 @@ export function createOrbMaterial(gpu: Gpu, initial?: OrbSnapshot, resolution = 
       const scene=scenes.get(controls.orb);
       if(!scene) throw new Error('Orb material is not prepared.');
       active=controls.orb;
-      scene.advance(Math.min(dt,0.05),drive(controls));
-      current.pass(output,scene.shader);
+      const changed=scene.advance(Math.min(dt,0.05),drive(controls));
+      if(controls.orbStrength===0) { textureKey=undefined; return; }
+      if(changed || textureKey!==controls.orb) { current.pass(output,scene.shader); textureKey=controls.orb; }
     },
     snapshot() { return active ? scenes.get(active)?.snapshot() : undefined; },
-    restore(next?:OrbSnapshot) { saved=next; if(next && scenes.has(next.key)) { scenes.get(next.key)!.restore(next);scenes.get(next.key)!.resize(output.size);saved=undefined; } },
+    restore(next?:OrbSnapshot) {
+      textureKey=undefined; active=undefined;
+      if(!next) {
+        for(const [key,scene] of scenes) {
+          const compilation=pending.get(key);
+          if(compilation) void compilation.then(()=>scene.dispose(),()=>scene.dispose());
+          else scene.dispose();
+        }
+        scenes.clear();pending.clear();
+      }
+      saved=next; if(next && scenes.has(next.key)) { scenes.get(next.key)!.restore(next);scenes.get(next.key)!.resize(output.size);saved=undefined; } },
     destroy() { if(destroyed)return;destroyed=true;for(const scene of scenes.values())scene.dispose();scenes.clear();(output as typeof output & {destroy():void}).destroy(); },
   };
 }

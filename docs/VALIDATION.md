@@ -127,3 +127,11 @@ The user-supplied Knot PNG was reproduced from its embedded recipe. After conser
 ## Glass Sculptures becomes the main workspace
 
 The root entry now mounts only StudioApp; the retired Studies UI is no longer reachable via query or saved workspace. Environment colors and strengths are normalized, stored in recipes, and passed to both preview/export shaders. Native GPU rendered the neutral scene. Computer verified root startup, environment edits surviving reload, and absence of the legacy link. Build, typecheck, lint and 112 CPU checks pass. The existing browser suite has 4 passes and 6 failures because those six require the removed legacy window.hyalos/editor/drawer interface. Tests were not rewritten under the repository's no-new-tests instruction; these failures are not represented as new-studio coverage.
+
+## Full reset and redundant GPU work
+
+Computer verified Reset all returns Gyroid/no orb/75%/1920-wide export/neutral key/zero atmosphere; Undo reset restored the previous Wave, 4K and 0.7 atmosphere state. The closed orb gallery contains zero image elements. A one-off native GPU verification counted one orb pass for three unchanged paused frames, no additional pass at zero strength, and one fresh pass after resetting/reselecting. Native Pearl/ORB-09 rendered successfully. Build, lint and 112 CPU tests passed. Chrome DevTools MCP is not configured, so the requested web-perf trace audit stopped at its availability prerequisite; no CWV or timing claims were made. Legacy browser UI failures from the retired editor remain documented above.
+
+## Model, sampling and bloom refinement
+
+All 15 modes rendered on native WebGPU with the revised surface/bloom pipeline; Gyroid, Trefoil and Prism were rendered at 1920 × 1080, plus Gyroid at 3840 × 2160. At maximum bloom spread, a one-off full-frame versus tiled 1024 × 576 comparison measured maximum channel difference 2/255, mean 0.000337/255, and maximum tile-boundary difference 1/255. These are pixel comparisons, not FPS claims. Build, typecheck, lint and 112 CPU checks passed. Browser interaction checks used Computer; IAB has no WebGPU and therefore only qualifies UI/state behavior. Existing legacy browser failures remain as documented.

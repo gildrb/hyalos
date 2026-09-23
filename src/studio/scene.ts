@@ -12,7 +12,7 @@ import {
 } from 'vgpu';
 import type { StudioCamera } from './model.ts';
 import bloomBlurWgsl from '../../glass-sculpture/bloom-blur.wgsl?raw';
-import bloomExtractWgsl from '../../glass-sculpture/bloom-extract.wgsl?raw';
+import bloomExtractWgsl from './bloom-extract.wgsl?raw';
 import presentWgsl from './present.wgsl?raw';
 import sculptureWgsl from './sculpture.wgsl?raw';
 
@@ -99,6 +99,8 @@ interface SceneTargets {
   readonly hdr: Target;
   readonly bloomA: Target;
   readonly bloomB: Target;
+  readonly bloomC: Target;
+  readonly bloomD: Target;
 }
 
 export interface SculptureScene {
@@ -142,6 +144,8 @@ export function createScene(
   const extract = effect(gpu, bloomExtractWgsl, { label: 'glass-sculpture-bloom-extract' });
   const blurHorizontal = effect(gpu, bloomBlurWgsl, { label: 'glass-sculpture-bloom-horizontal' });
   const blurVertical = effect(gpu, bloomBlurWgsl, { label: 'glass-sculpture-bloom-vertical' });
+  const wideHorizontal = effect(gpu, bloomBlurWgsl, { label: 'glass-bloom-wide-horizontal' });
+  const wideVertical = effect(gpu, bloomBlurWgsl, { label: 'glass-bloom-wide-vertical' });
   const present = effect(gpu, presentWgsl, { label: 'glass-sculpture-present' });
   const targets = createTargets(gpu, output.size, controls.renderScale);
   const rig = copyRig(selectedRig(controls));
@@ -150,6 +154,8 @@ export function createScene(
   try {
     bindTargets();
   } catch (error) {
+    destroyTarget(targets.bloomD);
+    destroyTarget(targets.bloomC);
     destroyTarget(targets.bloomB);
     destroyTarget(targets.bloomA);
     destroyTarget(targets.hdr);
@@ -164,6 +170,8 @@ export function createScene(
         extract.compile(targets.bloomA),
         blurHorizontal.compile(targets.bloomB),
         blurVertical.compile(targets.bloomA),
+        wideHorizontal.compile(targets.bloomC),
+        wideVertical.compile(targets.bloomD),
         present.compile({ colors: [currentOutput.format] }),
       ]);
     },
@@ -180,6 +188,8 @@ export function createScene(
       ];
       targets.bloomA.resize(bloomSize);
       targets.bloomB.resize(bloomSize);
+      targets.bloomC.resize(bloomSize);
+      targets.bloomD.resize(bloomSize);
       bindTargets();
     },
     render(currentFrame, currentOutput, camera, currentControls, state) {
@@ -208,8 +218,10 @@ export function createScene(
           atmosphere_color: [...linearHex(currentControls.atmosphereColor),currentControls.environmentPower],
           reflection_color: [...linearHex(currentControls.reflectionColor),currentControls.reflectionPower],
           custom_tint: [...linearHex(currentControls.glassColor),currentControls.tintDensity],
-          dispersion: currentControls.dispersion ? 1 : 0,
-          strip_angle: 0.8 + state.clockTime * 0.1,
+          dispersion: currentControls.dispersion ? currentControls.dispersionAmount : 0,
+          roughness: currentControls.roughness, edge_softness: currentControls.edgeSoftness,
+          sample_count: currentControls.samples, floor_enabled: currentControls.floor ? 1 : 0,
+          strip_angle: 0.8 + (currentControls.lightMotion==='drift' ? state.clockTime * 0.1 : 0),
           floor_luminance: rig.floorLuminance,
           metalness: currentControls.metalness,
           visible_lights: currentControls.visibleLights ? 1 : 0,
@@ -234,18 +246,25 @@ export function createScene(
         coolness: currentControls.effects ? currentControls.coolness : 0,
         exposure: currentControls.exposure, vignette: currentControls.effects ? 0.7 : 0,
       } });
+      extract.set({params:{threshold:currentControls.bloomThreshold,knee:currentControls.bloomKnee}});
+      wideHorizontal.set({params:{direction:[targets.bloomA.texelSize[0]*currentControls.glowRadius*2,0]}});
+      wideVertical.set({params:{direction:[0,targets.bloomA.texelSize[1]*currentControls.glowRadius*2]}});
       blurHorizontal.set({ params: { direction: [targets.bloomA.texelSize[0]*currentControls.glowRadius,0] } });
       blurVertical.set({ params: { direction: [0,targets.bloomB.texelSize[1]*currentControls.glowRadius] } });
       currentFrame.pass(targets.hdr, sculpture);
       currentFrame.pass(targets.bloomA, extract);
       currentFrame.pass(targets.bloomB, blurHorizontal);
       currentFrame.pass(targets.bloomA, blurVertical);
+      currentFrame.pass(targets.bloomC, wideHorizontal);
+      currentFrame.pass(targets.bloomD, wideVertical);
       currentFrame.pass(currentOutput, present);
     },
     destroy() {
       if (destroyed) return;
       destroyed = true;
       orbMaterial.destroy();
+      destroyTarget(targets.bloomD);
+      destroyTarget(targets.bloomC);
       destroyTarget(targets.bloomB);
       destroyTarget(targets.bloomA);
       destroyTarget(targets.hdr);
@@ -258,7 +277,7 @@ export function createScene(
       params: {
         texel: targets.hdr.texelSize,
         threshold: 1,
-        padding: 0,
+        knee: 0.65,
       },
       source: targets.hdr,
       linear_sampler: linearSampler,
@@ -273,7 +292,10 @@ export function createScene(
       source: targets.bloomB,
       linear_sampler: linearSampler,
     });
+    wideHorizontal.set({params:{direction:[targets.bloomA.texelSize[0]*2,0],padding:[0,0]},source:targets.bloomA,linear_sampler:linearSampler});
+    wideVertical.set({params:{direction:[0,targets.bloomC.texelSize[1]*2],padding:[0,0]},source:targets.bloomC,linear_sampler:linearSampler});
     present.set({
+      bloom_wide: targets.bloomD,
       params: { bloom_strength: BLOOM_STRENGTH, time: 0, grain: 0.012, texture: 0, coolness: 0, grade_color: [1,1,1,0], exposure: 1.05, vignette: 0.7, antialias: 1, full_size: targets.hdr.size, tile_origin: [0,0], tile_size: targets.hdr.size },
       scene_texture: targets.hdr,
       bloom_texture: targets.bloomA,
@@ -298,6 +320,8 @@ function createTargets(gpu: Gpu, outputSize: readonly [number, number], renderSc
       hdr: own(target(gpu, { size: [width, height], format: HDR_FORMAT, label: 'glass-sculpture-hdr' })),
       bloomA: own(target(gpu, { size: bloomSize, format: HDR_FORMAT, label: 'glass-sculpture-bloom-a' })),
       bloomB: own(target(gpu, { size: bloomSize, format: HDR_FORMAT, label: 'glass-sculpture-bloom-b' })),
+      bloomC: own(target(gpu, { size: bloomSize, format: HDR_FORMAT, label: 'glass-sculpture-bloom-c' })),
+      bloomD: own(target(gpu, { size: bloomSize, format: HDR_FORMAT, label: 'glass-sculpture-bloom-d' })),
     };
   } catch (error) {
     for (const resource of owned.reverse()) destroyTarget(resource);

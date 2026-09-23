@@ -23,6 +23,10 @@ try {
     const input = args.find(x => x.startsWith('--recipe='))?.slice(9);
     const recipe = input ? parseSculpture(readPngProject(readFileSync(input))) : composition(name);
     recipe.controls.renderScale = 1;
+    const surface = args.find(x => x.startsWith('--surface='))?.slice(10);
+    if(surface==='chrome') {recipe.controls.metalness=1;recipe.controls.roughness=0.28;}
+    if(surface==='polished') {recipe.controls.metalness=0.65;recipe.controls.roughness=0.18;}
+    if(surface==='glass') {recipe.controls.metalness=0;recipe.controls.roughness=0.08;}
     const light = args.find(x => x.startsWith('--light='))?.slice(8);
     if (light) recipe.controls.light = light;
     const orb = args.find(x => x.startsWith('--orb='))?.slice(6); if(orb)recipe.controls.orb=orb;
@@ -30,7 +34,7 @@ try {
     try {
       const pixels = await renderSculpturePixels(gpu,recipe);
       const png = new PNG({width,height}); png.data.set(new Uint8Array(pixels));
-      recipe.shaderHash = createHash('sha256').update(['src/studio/sculpture.wgsl','glass-sculpture/bloom-extract.wgsl','glass-sculpture/bloom-blur.wgsl','src/studio/present.wgsl'].map(p=>readFileSync(p,'utf8')).concat(Object.values(ORB_SHADERS)).join('\n---\n')).digest('hex');
+      recipe.shaderHash = createHash('sha256').update(['src/studio/sculpture.wgsl','src/studio/bloom-extract.wgsl','glass-sculpture/bloom-blur.wgsl','src/studio/present.wgsl'].map(p=>readFileSync(p,'utf8')).concat(Object.values(ORB_SHADERS)).join('\n---\n')).digest('hex');
       const data = addPngProject(PNG.sync.write(png),JSON.stringify({...recipe,output:{width,height}}));
       writeFileSync(resolve(directory,`${name}.png`),data); console.log(`${name}: ${data.length} bytes`);
     } finally { /* Targets are released by the shared exporter. */ }

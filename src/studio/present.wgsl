@@ -18,6 +18,7 @@ struct PresentParams {
 @group(0) @binding(1) var scene_texture: texture_2d<f32>;
 @group(0) @binding(2) var bloom_texture: texture_2d<f32>;
 @group(0) @binding(3) var linear_sampler: sampler;
+@group(0) @binding(4) var bloom_wide: texture_2d<f32>;
 
 fn aces(color: vec3f) -> vec3f {
   return (color * (2.51 * color + 0.03)) / (color * (2.43 * color + 0.59) + 0.14);
@@ -53,7 +54,7 @@ fn filtered_scene(uv: vec2f) -> vec3f {
 fn fs_main(@location(0) uv: vec2f) -> @location(0) vec4f {
   let scene = filtered_scene(uv);
   let global_uv = (params.tile_origin+uv*params.tile_size)/params.full_size;
-  let bloom = textureSampleLevel(bloom_texture, linear_sampler, uv, 0.0).rgb;
+  let bloom = textureSampleLevel(bloom_texture, linear_sampler, uv, 0.0).rgb*0.65 + textureSampleLevel(bloom_wide,linear_sampler,uv,0.0).rgb*0.35;
   var color = aces((scene + bloom * params.bloom_strength) * params.exposure);
   let centered = global_uv - 0.5;
   color *= 1.0 - dot(centered, centered) * params.vignette;

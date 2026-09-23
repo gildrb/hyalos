@@ -27,13 +27,14 @@ export function installPointerInput(canvas: HTMLCanvasElement, initial?: { camer
   let hoverRemaining = 0;
   let elapsed = 0;
   let activePointer: number | undefined;
+  let lightMotion: 'fixed' | 'pointer' | 'drift' = 'fixed';
   let previousX = 0;
   let previousY = 0;
   const previousTouchAction = canvas.style.touchAction;
   canvas.style.touchAction = 'none';
 
   const steerLight = (event: PointerEvent) => {
-    if (!event.isPrimary) return;
+    if (!event.isPrimary || lightMotion!=='pointer') return;
     const rect = canvas.getBoundingClientRect();
     const x = (event.clientX - rect.left) / Math.max(1, rect.width);
     const y = (event.clientY - rect.top) / Math.max(1, rect.height);
@@ -77,6 +78,19 @@ export function installPointerInput(canvas: HTMLCanvasElement, initial?: { camer
     targetRadius = clampRadius(targetRadius * Math.exp(event.deltaY * DOLLY_SPEED));
   };
 
+  const keyboard = (event: KeyboardEvent) => {
+    if(event.altKey || event.ctrlKey || event.metaKey)return;
+    const step=event.shiftKey ? 0.12 : 0.04;
+    if(event.key==='ArrowLeft')targetYaw+=step;
+    else if(event.key==='ArrowRight')targetYaw-=step;
+    else if(event.key==='ArrowUp')targetPitch=clampPitch(targetPitch-step);
+    else if(event.key==='ArrowDown')targetPitch=clampPitch(targetPitch+step);
+    else if(event.key==='+' || event.key==='=')targetRadius=clampRadius(targetRadius*0.9);
+    else if(event.key==='-')targetRadius=clampRadius(targetRadius/0.9);
+    else return;
+    event.preventDefault();
+  };
+  canvas.addEventListener('keydown',keyboard);
   canvas.addEventListener('pointerdown', down);
   canvas.addEventListener('pointermove', move, { passive: true });
   canvas.addEventListener('pointerup', finishDrag);
@@ -86,6 +100,7 @@ export function installPointerInput(canvas: HTMLCanvasElement, initial?: { camer
 
   return {
     restore(state: { camera: StudioCamera; light: { azimuth: number; elevation: number } }) {
+      elapsed = 0;
       targetYaw = yaw = state.camera.yaw;
       targetPitch = pitch = clampPitch(state.camera.pitch);
       targetRadius = radius = clampRadius(state.camera.radius/(state.camera.lens ?? 1));
@@ -99,11 +114,12 @@ export function installPointerInput(canvas: HTMLCanvasElement, initial?: { camer
     get light() {
       return { azimuth: lightAzimuth, elevation: lightElevation };
     },
-    advance(deltaTime: number) {
+    advance(deltaTime: number, motion: 'fixed' | 'pointer' | 'drift' = 'fixed') {
+      lightMotion=motion;
       const dt = Math.max(0, Math.min(0.1, deltaTime));
       elapsed += dt;
       hoverRemaining = Math.max(0, hoverRemaining - dt);
-      if (hoverRemaining === 0) {
+      if (hoverRemaining === 0 && lightMotion==='drift') {
         targetLightAzimuth = 0.9 + Math.sin(elapsed * 0.23) * 1.6;
         targetLightElevation = 0.45 + Math.sin(elapsed * 0.37) * 0.3;
       }
@@ -116,6 +132,7 @@ export function installPointerInput(canvas: HTMLCanvasElement, initial?: { camer
       lightElevation += (targetLightElevation - lightElevation) * lightBlend;
     },
     dispose() {
+      canvas.removeEventListener('keydown',keyboard);
       canvas.removeEventListener('pointerdown', down);
       canvas.removeEventListener('pointermove', move);
       canvas.removeEventListener('pointerup', finishDrag);

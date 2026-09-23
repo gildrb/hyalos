@@ -18,6 +18,10 @@ struct SculptureParams {
   atmosphere_color: vec4f,
   reflection_color: vec4f,
   dispersion: f32,
+  roughness: f32,
+  edge_softness: f32,
+  sample_count: f32,
+  floor_enabled: f32,
   strip_angle: f32,
   floor_luminance: f32,
   metalness: f32,
@@ -52,6 +56,10 @@ fn smooth_union(a: f32, b: f32, radius: f32) -> f32 {
   return mix(b, a, blend) - radius * blend * (1.0 - blend);
 }
 
+fn smooth_intersection(a: f32, b: f32, radius: f32) -> f32 {
+  return -smooth_union(-a,-b,radius);
+}
+
 fn torus_distance(point: vec3f, radii: vec2f) -> f32 {
   return length(vec2f(length(point.xz) - radii.x, point.y)) - radii.y;
 }
@@ -68,7 +76,7 @@ fn hyalos_distance(world: vec3f, mode: i32) -> f32 {
   if (mode == 3) {
     // Rounded crescent carved from a continuous curved shell.
     let q = vec3f(rotate2(0.5)*p.xy,p.z);
-    let crescent = max(length(q.xy)-0.95,-(length(q.xy-vec2f(-0.34,0.24))-0.86));
+    let crescent = smooth_intersection(length(q.xy)-0.95,-(length(q.xy-vec2f(-0.34,0.24))-0.86),params.edge_softness);
     let bevel = vec2f(crescent,abs(q.z)-0.13);
     return length(max(bevel,vec2f(0.0)))+min(max(bevel.x,bevel.y),0.0)-0.055;
   }
@@ -101,7 +109,7 @@ fn hyalos_distance(world: vec3f, mode: i32) -> f32 {
   if (mode == 7) {
     let q = p*4.8;
     let schwarz = (cos(q.x)+cos(q.y)+cos(q.z))/8.32;
-    return max(length(p)-1.03,abs(schwarz)-0.055);
+    return smooth_intersection(length(p)-1.03,abs(schwarz)-0.055,params.edge_softness);
   }
   if (mode == 9) {
     let angle=atan2(p.z,p.x);
@@ -112,7 +120,7 @@ fn hyalos_distance(world: vec3f, mode: i32) -> f32 {
     let phase=p.y*3.7;
     let center=vec2f(cos(phase),sin(phase))*0.53;
     let helix=min(length(p.xz-center),length(p.xz+center))-0.19;
-    return max(helix,abs(p.y)-1.0)*0.36;
+    return smooth_intersection(helix,abs(p.y)-1.0,params.edge_softness)*0.36;
   }
   if (mode == 11) {
     let angle=atan2(p.z,p.x);
@@ -122,7 +130,7 @@ fn hyalos_distance(world: vec3f, mode: i32) -> f32 {
   if (mode == 12) {
     let octahedron=(abs(p.x)+abs(p.y)+abs(p.z)-1.45)*0.57735027-0.08;
     let holes=min(length(p.xy),min(length(p.xz),length(p.yz)))-0.24;
-    return max(octahedron,-holes);
+    return smooth_intersection(octahedron,-holes,params.edge_softness);
   }
   if (mode == 13) {
     var cluster=100.0;
@@ -157,7 +165,7 @@ fn sculpture_distance(world_point: vec3f) -> f32 {
       sin(point.y * frequency) * cos(point.z * frequency) +
       sin(point.z * frequency) * cos(point.x * frequency)
     ) / frequency;
-    return max(length(point) - 1.0, abs(gyroid) - 0.07) * 0.55;
+    return smooth_intersection(length(point) - 1.0, abs(gyroid) - 0.07, params.edge_softness) * 0.55;
   }
 
   if (mode == 2) {
@@ -249,6 +257,19 @@ fn studio_radiance(direction: vec3f) -> vec3f {
 }
 
 // Lighting cards illuminate/refelect in the sculpture, but need not appear as floating discs in the background.
+// A compact angular filter gives rough reflections a continuous highlight footprint.
+fn reflection_radiance(direction: vec3f) -> vec3f {
+  if(params.roughness < 0.005) { return studio_radiance(direction); }
+  let axis=select(vec3f(0.0,1.0,0.0),vec3f(1.0,0.0,0.0),abs(direction.y)>0.95);
+  let tangent=normalize(cross(direction,axis));
+  let bitangent=cross(direction,tangent);
+  let radius=params.roughness*params.roughness*0.75;
+  return studio_radiance(direction)*0.4 + 0.15*(
+    studio_radiance(normalize(direction+tangent*radius))+
+    studio_radiance(normalize(direction-tangent*radius))+
+    studio_radiance(normalize(direction+bitangent*radius))+
+    studio_radiance(normalize(direction-bitangent*radius)));
+}
 fn background_radiance(direction: vec3f) -> vec3f {
   let sky_mix = pow(clamp(direction.y*0.5+0.5,0.0,1.0),1.5);
   return mix(params.background_bottom.rgb,params.background_top.rgb,sky_mix) * params.atmosphere_color.w;
@@ -281,13 +302,15 @@ fn shade_floor(point: vec3f, incoming: vec3f) -> vec3f {
 
 fn trace_glass(origin: vec3f, direction: vec3f, hit_distance: f32, ior: f32) -> vec3f {
   var position = origin + direction * hit_distance;
-  var ray = refract(direction, sculpture_normal(position), 1.0 / ior);
+  let entry_normal = sculpture_normal(position);
+  var ray = refract(direction, entry_normal, 1.0 / ior);
+  position -= entry_normal * 0.001;
   var radiance = vec3f(0.0);
   var throughput = 1.0;
   var internal_distance = 0.0;
 
   for (var bounce = 0; bounce < 3; bounce += 1) {
-    let start = position + ray * 0.004;
+    let start = position + ray * 0.0002;
     let exit_distance = march_surface(start, ray, -1.0, 6.0, 160);
     if (exit_distance < 0.0) {
       radiance += studio_radiance(ray) * throughput;
@@ -301,12 +324,13 @@ fn trace_glass(origin: vec3f, direction: vec3f, hit_distance: f32, ior: f32) -> 
     let exit_ray = refract(ray, inward_normal, ior);
     if (dot(exit_ray, exit_ray) < 0.5) {
       ray = reflect(ray, inward_normal);
+      position += inward_normal * 0.001;
       continue;
     }
 
     let reflection = fresnel_schlick(dot(-ray, inward_normal));
-    var outside = studio_radiance(exit_ray);
-    if (exit_ray.y < 0.0) {
+    var outside = reflection_radiance(exit_ray);
+    if (exit_ray.y < 0.0 && params.floor_enabled > 0.5) {
       let floor_distance = (FLOOR_HEIGHT - position.y) / exit_ray.y;
       let floor_point = position + exit_ray * floor_distance;
       outside = mix(shade_floor(floor_point, exit_ray), outside, smoothstep(2.5, 6.0, length(floor_point.xz)));
@@ -314,6 +338,7 @@ fn trace_glass(origin: vec3f, direction: vec3f, hit_distance: f32, ior: f32) -> 
     radiance += outside * (1.0 - reflection) * throughput;
     throughput *= reflection;
     ray = reflect(ray, inward_normal);
+    position += inward_normal * 0.001;
     if (throughput < 0.05) { break; }
   }
 
@@ -338,10 +363,8 @@ fn orb_color(point: vec3f,normal: vec3f,uv:vec2f) -> vec3f {
   return (orb_linear(p.yz*0.3+0.5)*weight.x+orb_linear(p.xz*0.3+0.5)*weight.y+orb_linear(p.xy*0.3+0.5)*weight.z)/max(dot(weight,vec3f(1.0)),0.001);
 }
 
-@fragment
-fn fs_main(@location(0) uv: vec2f) -> @location(0) vec4f {
+fn shade_sample(global_uv: vec2f) -> vec3f {
   let aspect = params.resolution.x / max(params.resolution.y, 1.0);
-  let global_uv = (params.tile_origin + uv*params.tile_size)/params.resolution;
   var screen = (global_uv - 0.5) * 2.0;
   screen = vec2f(screen.x * aspect, -screen.y);
 
@@ -357,15 +380,15 @@ fn fs_main(@location(0) uv: vec2f) -> @location(0) vec4f {
 
   let surface_steps = i32(mix(160.0, 256.0, params.quality));
   let sculpture_hit = march_surface(camera_position, ray, 1.0, 12.0, surface_steps);
-  let floor_hit = select(-1.0, (FLOOR_HEIGHT - camera_position.y) / ray.y, ray.y < 0.0 && params.shape < 3.0);
+  let floor_hit = select(-1.0, (FLOOR_HEIGHT - camera_position.y) / ray.y, ray.y < 0.0 && params.floor_enabled > 0.5);
   var color: vec3f;
 
   if (sculpture_hit > 0.0 && (floor_hit < 0.0 || sculpture_hit < floor_hit)) {
     let point = camera_position + ray * sculpture_hit;
     let normal = sculpture_normal(point);
     let reflection_weight = fresnel_schlick(-dot(ray, normal));
-    let reflected = studio_radiance(reflect(ray, normal));
-    let spread = 0.008 * params.dispersion;
+    let reflected = reflection_radiance(reflect(ray, normal));
+    let spread = params.dispersion;
     var refracted = reflected;
     if (params.metalness >= 0.9999) {
       // Opaque silver has no transmitted ray; avoid undefined refraction at grazing angles.
@@ -395,10 +418,7 @@ fn fs_main(@location(0) uv: vec2f) -> @location(0) vec4f {
         color=mix(color,environment*(0.3+0.7*reflection_weight)*max(1.0,params.orb_strength),clamp(params.orb_strength,0.0,1.0));
       }
     }
-    let key_half = normalize(normalize(params.key.xyz) - ray);
-    let rim_half = normalize(normalize(params.rim.xyz) - ray);
-    color += params.key_color.rgb * pow(clamp(dot(normal, key_half), 0.0, 1.0), 400.0) * params.key.w * 0.4;
-    color += params.rim_color.rgb * pow(clamp(dot(normal, rim_half), 0.0, 1.0), 300.0) * params.rim.w * 0.25;
+    // The environment already reflects the softboxes. Do not add duplicate Phong spots.
   } else if (floor_hit > 0.0) {
     let floor_point = camera_position + ray * floor_hit;
     let reflected_ray = reflect(ray, vec3f(0.0, 1.0, 0.0));
@@ -426,5 +446,16 @@ fn fs_main(@location(0) uv: vec2f) -> @location(0) vec4f {
   }
 
   // Bound radiance before half-float storage and bloom to prevent overflow blocks.
-  return vec4f(clamp(color, vec3f(0.0), vec3f(128.0)), 1.0);
+  return clamp(color, vec3f(0.0), vec3f(128.0));
+}
+
+// Fixed spatial samples: no temporal ghosting, shared by live preview and tiled export.
+@fragment
+fn fs_main(@location(0) uv: vec2f) -> @location(0) vec4f {
+  let pixel=params.tile_origin+uv*params.tile_size;
+  if(params.sample_count<2.0) {return vec4f(shade_sample(pixel/params.resolution),1.0);}
+  let offsets=array<vec2f,4>(vec2f(-0.375,-0.125),vec2f(0.125,-0.375),vec2f(0.375,0.125),vec2f(-0.125,0.375));
+  var color=vec3f(0.0);
+  for(var i=0;i<4;i+=1){color+=shade_sample((pixel+offsets[i])/params.resolution);}
+  return vec4f(color*0.25,1.0);
 }

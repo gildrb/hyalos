@@ -214,7 +214,7 @@ const springStep = (x: number, v: number, target: number, dt: number) => {
 export interface OrbScene {
   readonly shader: Effect;
   /** Eases one step toward `drive` and writes the frame's uniforms. */
-  advance(dt: number, drive: OrbDrive): void;
+  advance(dt: number, drive: OrbDrive): boolean;
   resize(res: readonly [number, number]): void;
   dispose(): void;
   snapshot(): OrbSnapshot;
@@ -302,6 +302,8 @@ export const createOrbScene = (
   words[resSlot] = initialWidth;
   words[resSlot + 1] = initialHeight;
   uniform.write(words);
+
+  const uploaded = new Float32Array(words);
 
   /** Volumes and the shared flow clock: the two signals every shader reads. */
   const stepDrive = (dt: number, live: OrbDrive) => {
@@ -395,7 +397,10 @@ export const createOrbScene = (
       stepDrive(live.paused ? 0 : dt, live);
       stepParams(dt, live);
       stepColors(dt, live);
-      uniform.write(words);
+      let changed = false;
+      for (let i=0;i<words.length;i++) if(words[i] !== uploaded[i]) { changed=true; break; }
+      if(changed) { uniform.write(words); uploaded.set(words); }
+      return changed;
     },
     dispose() {
       uniform.destroy();
