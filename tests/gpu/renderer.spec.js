@@ -44,7 +44,7 @@ test('actual vGPU compilation, deterministic pixels, tiling, presets, PNG metada
   expect(await page.evaluate(()=>window.gpuHarness.errors)).toEqual([]);expect(errors).toEqual([]);
 });
 
-test('editor controls, export and paused restore use the same live renderer', async ({ page }) => {
+test('editor controls, export and manual-render restore use the same live renderer', async ({ page }) => {
   await page.goto('/');await page.waitForFunction(()=>!!window.hyalos);
   const ready = await page.evaluate(()=>window.hyalos.ready);
   expect(ready, await page.locator('#gpu-error').innerText()).toBe(true);
@@ -61,7 +61,11 @@ test('editor controls, export and paused restore use the same live renderer', as
   await page.reload();await page.waitForFunction(()=>!!window.hyalos);
   expect(await page.evaluate(()=>window.hyalos.ready), await page.locator('#gpu-error').innerText()).toBe(true);
   expect(await page.evaluate(()=>window.hyalos.getScene().settings.time)).toBe(3.25);
-  await expect(page.locator('#play')).toHaveAttribute('aria-label','Play animation');
-  await expect(page.locator('#poster')).toBeHidden();
+  await expect(page.locator('#poster')).toBeVisible();
+  await expect(page.locator('#canvas')).toHaveAttribute('aria-hidden', 'true');
+  await page.locator('#render-preview').click();
+  await expect(page.locator('#poster')).toBeHidden({ timeout: 120000 });
+  await expect(page.locator('#canvas')).toHaveAttribute('aria-hidden', 'false');
+  await expect(page.locator('#render-preview')).toBeEnabled();
   await page.screenshot({ path: test.info().outputPath('editor-live.png') });
 });

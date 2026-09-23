@@ -22,7 +22,7 @@ export async function renderPixels(renderer: PixelRenderer, settings: Settings, 
   let done = 0;
   for (const tile of tiles) {
     abortIfNeeded(signal);
-    const data = await renderer.readTile(snapshot, width, height, tile, quality);
+    const data = await renderer.readTile(snapshot, width, height, tile, quality, signal);
     abortIfNeeded(signal);
     if (data.byteLength !== tile.width * tile.height * 4) throw new Error('Unexpected GPU readback size.');
     for (let row = 0; row < tile.h; row++) {

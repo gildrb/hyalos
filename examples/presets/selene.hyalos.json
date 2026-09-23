@@ -1,0 +1,70 @@
+{
+  "format": "hyalos-visual",
+  "version": 1,
+  "engine": "hyalos-prometheus/1",
+  "shaderHash": "3e5a4965d496ee4e6d50fa2273117bfa5a4692fda365f56bbd2aed05b8f917a6",
+  "settings": {
+    "seed": 713021,
+    "scene": 7,
+    "finish": 0,
+    "rotation": 32,
+    "twist": 0.38,
+    "spread": 1.12,
+    "thickness": 0.078,
+    "zoom": 1.6,
+    "panX": 0.05,
+    "panY": -0.02,
+    "holeWarp": 0.9,
+    "holeFrequency": 5.25,
+    "holeSoftness": 0.42,
+    "perforation": 0,
+    "yaw": -12,
+    "pitch": 5,
+    "nodes": 3,
+    "roughness": 0.25,
+    "metallic": 0.72,
+    "detail": 0.035,
+    "transmission": 0,
+    "ior": 1.5,
+    "dispersion": 0.004,
+    "absorption": 0.35,
+    "power": 95,
+    "radius": 0.09,
+    "keyAngle": -55,
+    "fill": 0.28,
+    "beam": 0.62,
+    "beamAngle": 30,
+    "density": 0.055,
+    "anisotropy": 0.38,
+    "turbulence": 0.7,
+    "exposure": -0.1,
+    "contrast": 1.24,
+    "bloom": 0.15,
+    "bloomRadius": 7,
+    "grain": 0.021,
+    "vignette": 0.28,
+    "spacing": 3.5,
+    "dotSize": 0.35,
+    "dither": 1,
+    "sampleGrid": 2,
+    "time": 0,
+    "duration": 12,
+    "palette": {
+      "background": [
+        0.045,
+        0.008,
+        245
+      ],
+      "metal": [
+        0.8,
+        0.018,
+        220
+      ],
+      "energy": [
+        0.9,
+        0.075,
+        220
+      ]
+    }
+  }
+}

@@ -4,6 +4,7 @@ struct Params {
   view: vec4f, tile: vec4f, shape: vec4f, style: vec4f,
   motion: vec4f, light: vec4f, medium: vec4f, material: vec4f,
   background: vec4f, metal: vec4f, energy: vec4f, finish: vec4f,
+  // nodes retains its original slot: transmission, green IOR, blue-red ΔIOR, absorption.
   emit: vec4f, camera: vec4f, nodes: vec4f, quality: vec4f,
 };
 @group(0) @binding(0) var<uniform> u: Params;

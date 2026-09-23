@@ -22,7 +22,6 @@ test('production HTML loads CSS, Preact, UTF-8 and all images at either base pat
   expect(await page.locator('.workspace').evaluate(node => getComputedStyle(node).display)).toBe('grid');
   expect(await page.evaluate(() => document.characterSet)).toBe('UTF-8');
   await page.waitForFunction(() => Array.from(document.images).every(image => image.complete && image.naturalWidth > 0));
-  expect(await page.locator('.preset-card').count()).toBe(6);
   expect(errors).toEqual([]); expect(failed).toEqual([]);
 });
 
@@ -49,7 +48,6 @@ test('controls, undo, redo and recipe export remain usable without a GPU', async
   await page.waitForTimeout(350);
   await page.reload(); await page.waitForFunction(() => !!window.hyalos);
   expect(await page.evaluate(() => window.hyalos.getScene().settings.time)).toBe(3.25);
-  await expect(page.locator('#play')).toBeDisabled();
 });
 
 test('responsive library drawer remains accessible without horizontal overflow', async ({ page }) => {

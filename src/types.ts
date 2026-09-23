@@ -3,6 +3,11 @@ export type Vec4 = [number, number, number, number];
 export type ColorRole = 'background' | 'metal' | 'energy';
 export type Palette = Record<ColorRole, Oklch>;
 export type Quality = 'draft' | 'balanced' | 'final';
+export type StartupPhase = 'idle' | 'loading' | 'compiling' | 'ready';
+export interface RendererInitOptions {
+  signal?: AbortSignal;
+  onPhase?: (phase: 'loading' | 'compiling') => void;
+}
 export type Tab = 'form' | 'light' | 'finish';
 export type NumericKey = keyof typeof import('./model.ts').RANGES;
 export type Settings = Record<NumericKey, number> & { palette: Palette };
@@ -24,10 +29,10 @@ export interface ExportTile extends TileRegion { x: number; y: number; w: number
 export interface PixelRenderer {
   readonly hash: string;
   readonly maxTexture: number;
-  readTile(settings: Settings, width: number, height: number, tile: TileRegion, quality?: Quality): Promise<Uint8Array>;
+  readTile(settings: Settings, width: number, height: number, tile: TileRegion, quality?: Quality, signal?: AbortSignal): Promise<Uint8Array>;
 }
 export interface Renderer extends PixelRenderer {
-  drawPreview(settings: Settings, width: number, height: number, quality?: Quality): void;
+  drawPreview(settings: Settings, width: number, height: number, quality?: Quality, signal?: AbortSignal): Promise<void>;
   settled(): Promise<void>;
   dispose(): void;
 }

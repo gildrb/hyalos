@@ -1,9 +1,10 @@
 import { Component, render } from 'preact';
 import type { ComponentChildren } from 'preact';
 import { useCallback, useEffect, useMemo, useLayoutEffect, useRef, useState } from 'preact/hooks';
-import { DEFAULT, PRESETS, FINISHES, STORAGE_KEY, parseDocument } from './model.ts';
+import { DEFAULT, PRESETS, STORAGE_KEY, parseDocument } from './model.ts';
 import { Editor, messageOf } from './editor.ts';
 import { readPngProject } from './binary.ts';
+import { download } from './export.ts';
 import { studyImages } from './assets.ts';
 import { Inspector } from './components/Inspector.tsx';
 import { Viewport } from './components/Viewport.tsx';
@@ -13,6 +14,7 @@ import { Icon } from './components/Icon.tsx';
 function App() {
   const [notification, setNotification] = useState(''), [exportOpen, setExportOpen] = useState(false), [aboutOpen, setAboutOpen] = useState(false);
   const [panel, setPanel] = useState<'presets' | 'inspector' | ''>('');
+  const [savingPng, setSavingPng] = useState(false);
   const notificationTimer = useRef<ReturnType<typeof setTimeout> | undefined>();
   const fileInput = useRef<HTMLInputElement>(null);
   const notify = useCallback((text: string): void => {
@@ -55,7 +57,6 @@ function App() {
     const keydown = (event: KeyboardEvent): void => {
       if (editor.busy || document.querySelector('dialog[open]') || (event.target instanceof HTMLElement && /INPUT|TEXTAREA|SELECT/.test(event.target.tagName))) return;
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'z') { event.preventDefault(); if (event.shiftKey) editor.redo(); else editor.undo(); }
-      if (event.code === 'Space') { event.preventDefault(); editor.togglePlay(); }
       if (event.key === 'Escape') setPanel('');
     };
     document.addEventListener('keydown', keydown);
@@ -63,23 +64,36 @@ function App() {
   }, [editor]);
   return <div class="editor" data-panel={panel}>
     <header class="topbar">
-      <a class="brand" href="./" aria-label="Hyalos visual laboratory"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 24 25 6M7 6l18 18M6 16h20" /></svg><strong>hyalos</strong><span class="brand-divider" /><span>visual laboratory</span></a>
-      <div class="header-centre"><span class="small-dot" />PROMETHEAN STUDIES<span class="muted">/ 001</span></div>
-      <div class="header-actions"><span class="privacy">ON DEVICE</span><button id="open-project" class="text-button" disabled={editor.busy} onClick={() => fileInput.current?.click()}>Open recipe</button><button id="open-export" class="primary" disabled={editor.busy} onClick={() => { editor.stop(); setExportOpen(true); }}>Export <Icon name="arrow" /></button></div>
+      <a class="brand" href="./">Hyalos</a>
+      <div class="header-actions">
+        <button id="open-project" class="text-button" disabled={editor.busy} onClick={() => fileInput.current?.click()}>Open recipe</button>
+        <button id="open-export" class="text-button" disabled={editor.busy} aria-label="Export options: format, resolution, sequence or project" title="Choose format, resolution, a PNG sequence or a project recipe" onClick={() => setExportOpen(true)}>Export options <Icon name="arrow" /></button>
+        <button id="save-png" class="primary" disabled={editor.status !== 'ready' || editor.busy || savingPng} aria-busy={savingPng} aria-label={savingPng ? 'Saving PNG' : 'Save PNG: 1920 × 1080 with embedded recipe'} title="Download a 1920 × 1080 PNG with its recipe, without opening options" onClick={async () => {
+          const filename = `hyalos-${editor.selected}-s${editor.settings.seed}-1920x1080.png`;
+          setPanel(''); setSavingPng(true);
+          try { download(await editor.exportPNG(1920, 1080), filename); notify('PNG saved with its recipe.'); }
+          catch (error) { notify(messageOf(error)); }
+          finally { setSavingPng(false); }
+        }}>{savingPng ? 'Saving…' : 'Save PNG'}<Icon name="download" /></button>
+        {savingPng && <button id="cancel-save-png" class="text-button" onClick={() => editor.cancelExport()}>Cancel save</button>}
+      </div>
     </header>
-    <div class="mobile-toolbar"><button data-panel="presets" aria-expanded={panel === 'presets'} onClick={() => setPanel(panel === 'presets' ? '' : 'presets')}>Studies</button><button data-panel="inspector" aria-expanded={panel === 'inspector'} onClick={() => setPanel(panel === 'inspector' ? '' : 'inspector')}>Parameters</button></div>
+    <div class="mobile-toolbar"><button data-panel="presets" aria-controls="study-library" aria-expanded={panel === 'presets'} onClick={() => setPanel(panel === 'presets' ? '' : 'presets')}>Studies</button><button data-panel="inspector" aria-controls="inspector" aria-expanded={panel === 'inspector'} onClick={() => setPanel(panel === 'inspector' ? '' : 'inspector')}>Edit</button></div>
+    {panel && <button class="panel-scrim" aria-label="Close panel" onClick={() => setPanel('')} />}
     <main class="workspace" id="workspace" inert={editor.busy}>
-      <aside class="library" aria-label="Study library"><div class="panel-header"><span>Studies</span><span class="counter">06</span></div><p class="library-intro">An intelligence of our own.</p>
-        <div id="presets" class="preset-list">{PRESETS.map((p, index) => <button key={p.id} class="preset-card" data-preset={p.id} aria-pressed={editor.selected === p.id} disabled={editor.busy} onClick={() => { editor.select(p.id); setPanel(''); }}><img src={studyImages[p.id]} alt="" /><span><span class="preset-name">{p.name}</span><small>{String(index + 1).padStart(2, '0')} / {FINISHES[p.settings.finish ?? 0].toUpperCase()}</small></span></button>)}</div>
-        <div class="library-bottom"><button class="outline-button" id="save-recipe" disabled={editor.busy} onClick={() => editor.saveRecipe()}>Save this variation <Icon name="download" /></button><p>Seeded. Adjustable. Yours.<br />No uploads. No runtime cloud.</p></div>
+      <aside class="library" id="study-library" aria-label="Study library"><div class="panel-header"><span>Studies</span></div>
+        <div id="presets" class="preset-list">{PRESETS.map(p => <button key={p.id} class="preset-card" data-preset={p.id} aria-pressed={editor.selected === p.id} disabled={editor.busy} onClick={() => { editor.select(p.id); setPanel(''); }}><img src={studyImages[p.id]} alt="" /><span class="preset-name">{p.name}</span></button>)}</div>
+        <div class="library-bottom">
+          <button class="outline-button" id="save-recipe" disabled={editor.busy} onClick={() => editor.saveRecipe()}>Save recipe <Icon name="download" /></button>
+          <button id="copy-link" class="text-button" onClick={async () => {
+            try { const url = new URL(location.href); url.hash = `scene=${encodeURIComponent(JSON.stringify(editor.getScene()))}`; await navigator.clipboard.writeText(url.toString()); notify('Scene link copied.'); }
+            catch { notify('Clipboard unavailable. Save the recipe instead.'); }
+          }}>Copy scene link <Icon name="arrow" /></button>
+        </div>
       </aside>
       <Viewport editor={editor} notify={notify} />
       <Inspector editor={editor} notify={notify} onAbout={() => setAboutOpen(true)} />
     </main>
-    <footer class="footer"><span>A FIRE HELD IN COMMON.</span><span id="shader-version">HYALOS VISUAL SYSTEM / {editor.hash?.slice(0, 8) ?? 'NOT COMPILED'}</span><button id="copy-link" class="text-button" onClick={async () => {
-      try { const url = new URL(location.href); url.hash = `scene=${encodeURIComponent(JSON.stringify(editor.getScene()))}`; await navigator.clipboard.writeText(url.toString()); notify('Scene link copied. Nothing was uploaded.'); }
-      catch { notify('Clipboard unavailable. Save the recipe instead.'); }
-    }}>Copy scene link <Icon name="arrow" /></button></footer>
     <input id="project-file" ref={fileInput} type="file" accept=".json,.png,application/json,image/png" hidden onChange={async e => {
       const input = e.currentTarget, file = input.files?.[0];
       if (!file) return;
@@ -88,7 +102,7 @@ function App() {
         const text = file.name.toLowerCase().endsWith('.png') ? readPngProject(new Uint8Array(await file.arrayBuffer())) : await file.text();
         const recipe = parseDocument(text);
         editor.setScene(recipe);
-        notify(editor.hash && recipe.shaderHash !== editor.hash ? 'Recipe restored. Its shader revision differs from this build.' : 'Recipe restored. Playback is paused.');
+        notify(editor.hash && recipe.shaderHash !== editor.hash ? 'Recipe restored. Its shader revision differs from this build.' : 'Recipe restored. Choose Render to update the preview.');
       } catch (error) { notify(messageOf(error)); }
       finally { input.value = ''; }
     }} />

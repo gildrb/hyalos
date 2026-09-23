@@ -7,6 +7,7 @@ fn sampleScene(global: vec2f) -> vec3f {
 }
 fn optical(global: vec2f) -> vec3f {
   let base = sampleScene(global);
+  if (u.energy.w == 0.0) { return base; }
   var scatter = vec3f(0.0);
   let radius = u.finish.z*u.view.y/1080.0;
   // Finite, normalised point-spread kernel. Redistributes, rather than invents, light.
@@ -42,7 +43,10 @@ fn optical(global: vec2f) -> vec3f {
     let value = dither8(pp,clamp(luminance(col)*1.7,0.0,1.0));
     col = mix(col,mix(background,ink,value),u.style.w);
   } else if (u.style.x > 2.5) {
-    let scan = 0.83+0.17*cos(global.y/max(scale,0.2)*PI);
+    // Suppress scan frequencies above the pixel Nyquist limit, not visible moiré.
+    let frequency = PI/max(scale,0.2);
+    let resolved = 1.0-smoothstep(PI*0.5,PI,frequency);
+    let scan = 0.83+0.17*resolved*cos(global.y*frequency);
     col *= scan;
   }
   // Camera vignetting, then display transform. Grain is an explicit graphic finish.
