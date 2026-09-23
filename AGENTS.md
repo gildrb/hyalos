@@ -9,7 +9,7 @@ Use the installed vGPU documentation, not a memorized API:
     npx vgpu docs find performance
     npx vgpu examples search raymarching
 
-Use `vgpu` itself. Do not replace it with a lookalike, a WebGL fallback, an AI image or a static image while claiming live rendering. `src/assets/presets` contains clearly documented CPU reference illustrations only.
+Use `vgpu` itself. Do not replace it with a lookalike, a WebGL fallback, an AI image or a static image while claiming live rendering. `src/assets/presets` contains saved GPU study renders, clearly labeled as references until a live preview completes. Regenerate them with `npm run render:studies`; never present a reference as a newly rendered scene.
 
 Keep all authored colors in OKLCH. Convert once to linear RGB for physical light transport; apply the display transfer function once after post-processing. Do not mix gamma-encoded colors as light.
 

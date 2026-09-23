@@ -1,0 +1,176 @@
+{
+  "source": "https://www.shadercn.run/",
+  "adaptation": "Install bundle flattens the upstream unqualified orb dependency; shader source is unchanged.",
+  "items": [
+    {
+      "id": "orb",
+      "url": "https://www.shadercn.run/r/orb.json",
+      "sha256": "25accd5a33a6687a65e4eaf9a99ada2c80a85110a940a0309d5e3521cad0707f"
+    },
+    {
+      "id": "orb-01",
+      "url": "https://www.shadercn.run/r/orb-01.json",
+      "sha256": "47242186dc58210dee83c7d9c3c0596a11d00602779f8e208587d5f3ec9ab4d2"
+    },
+    {
+      "id": "orb-02",
+      "url": "https://www.shadercn.run/r/orb-02.json",
+      "sha256": "1640377d1844d84fa02cc9bb164b851cc118ca63d64172508528fe1d4c7bfa09"
+    },
+    {
+      "id": "orb-03",
+      "url": "https://www.shadercn.run/r/orb-03.json",
+      "sha256": "b51140332de52b6d419163ce678fad95915ee58ab6030c46be73eed2f0b63caf"
+    },
+    {
+      "id": "orb-04",
+      "url": "https://www.shadercn.run/r/orb-04.json",
+      "sha256": "86a10fe9defb2699466ca8c79a05a01e88e63d6c10ed43ecf9afc3c5bade8b4e"
+    },
+    {
+      "id": "orb-05",
+      "url": "https://www.shadercn.run/r/orb-05.json",
+      "sha256": "1ba0ff51bf3341a563f5019182073900d7f8b54f764185433359929df0e13165"
+    },
+    {
+      "id": "orb-06",
+      "url": "https://www.shadercn.run/r/orb-06.json",
+      "sha256": "4b33ee32f21ce73dd9a5c62d832c7a905faaba2b2b0b8c4d1f5e833561930f83"
+    },
+    {
+      "id": "orb-07",
+      "url": "https://www.shadercn.run/r/orb-07.json",
+      "sha256": "7c6570ee27ef721afeda39c1029007cad2bd0d2880a83192724fc78e0d3ebcec"
+    },
+    {
+      "id": "orb-08",
+      "url": "https://www.shadercn.run/r/orb-08.json",
+      "sha256": "29b452f1c19e3a955f10d521b8e2094a63bfa4d43de4903e847c7a9eb3b68d2e"
+    },
+    {
+      "id": "orb-09",
+      "url": "https://www.shadercn.run/r/orb-09.json",
+      "sha256": "68f00c567f9e0dc02668777e488274584de39f0909226bde398aaaeea5e210fd"
+    },
+    {
+      "id": "orb-10",
+      "url": "https://www.shadercn.run/r/orb-10.json",
+      "sha256": "fd782047bbde7ec02560c5a645445659ade339716b322a9637bb80a316be9812"
+    },
+    {
+      "id": "orb-11",
+      "url": "https://www.shadercn.run/r/orb-11.json",
+      "sha256": "fdf69fcb5a9ad89f24a98dc53fc9534165d6e081a7185f0f791a32e4372d63b7"
+    },
+    {
+      "id": "orb-12",
+      "url": "https://www.shadercn.run/r/orb-12.json",
+      "sha256": "e386285dfdbabe1721a973d3de900e95c24e0667a5a659cfde57c4a36dfa2fe7"
+    },
+    {
+      "id": "orb-13",
+      "url": "https://www.shadercn.run/r/orb-13.json",
+      "sha256": "d9c80135f61e9d3d9694a1b3e241a423d58cfc106fb17d106d8aaf6438d2f954"
+    },
+    {
+      "id": "orb-14",
+      "url": "https://www.shadercn.run/r/orb-14.json",
+      "sha256": "bbb023cbd99ddfadb25581ae659e3715445f7e367c8ee12e206f93b902d3214a"
+    },
+    {
+      "id": "orb-15",
+      "url": "https://www.shadercn.run/r/orb-15.json",
+      "sha256": "7c6e4ee0c1e06a28e7e4ac303ace0314d0d2121228e63304e90b891b268e0702"
+    },
+    {
+      "id": "orb-16",
+      "url": "https://www.shadercn.run/r/orb-16.json",
+      "sha256": "8c7bcda5b6e4849f055b40e559579152bf3687208d9ae5a48624786baf1348a4"
+    },
+    {
+      "id": "orb-17",
+      "url": "https://www.shadercn.run/r/orb-17.json",
+      "sha256": "b5276292f2fd124a1f272d21a702ba41c96c5ee7e063a279a90f4e4e097e1960"
+    },
+    {
+      "id": "orb-18",
+      "url": "https://www.shadercn.run/r/orb-18.json",
+      "sha256": "fb1c79cf71880a18fd36e2842d35578536a0ca356cdac33c70bc5e7314e9be92"
+    },
+    {
+      "id": "orb-19",
+      "url": "https://www.shadercn.run/r/orb-19.json",
+      "sha256": "57361f472d97532bff8434c9fb1993ac15ee000b54c5b1375b486d20a1a854d0"
+    },
+    {
+      "id": "orb-20",
+      "url": "https://www.shadercn.run/r/orb-20.json",
+      "sha256": "069e9344c92253e36ba8ddef6fef5ed4bf942375e0733f25ef8e512bc0f5b27a"
+    },
+    {
+      "id": "orb-21",
+      "url": "https://www.shadercn.run/r/orb-21.json",
+      "sha256": "467e8dfa6d5c17da8a8d6a2e0c874caa4651f95cc32f80e1d2f3e51f31760381"
+    },
+    {
+      "id": "orb-22",
+      "url": "https://www.shadercn.run/r/orb-22.json",
+      "sha256": "cd12f2b4801a7c10f1ce6897f17cb4b639486194798e9bfadce4a77250b8ac32"
+    },
+    {
+      "id": "orb-23",
+      "url": "https://www.shadercn.run/r/orb-23.json",
+      "sha256": "0c80568a205df38f6a5c00038a84104fdb93f6a6ec89a38fa837dca0518553bb"
+    },
+    {
+      "id": "orb-24",
+      "url": "https://www.shadercn.run/r/orb-24.json",
+      "sha256": "e3aaa254dafc17b9c3b80dccd9e7759d745becff3f07f15c5c6fc862e63809c4"
+    },
+    {
+      "id": "orb-25",
+      "url": "https://www.shadercn.run/r/orb-25.json",
+      "sha256": "2e49d2a2f053aa58896e5cc150a7440b510d7afd2af85f8e9b99e53a989cbc0b"
+    },
+    {
+      "id": "orb-26",
+      "url": "https://www.shadercn.run/r/orb-26.json",
+      "sha256": "32fb862439e21ac8a8193eefdd6b40d7bb698b791112e8dd5f2768a723ced8c7"
+    },
+    {
+      "id": "orb-27",
+      "url": "https://www.shadercn.run/r/orb-27.json",
+      "sha256": "a17bec370bad48a36297b99ffa1f547d84ebb2cccca76f741c5ce48209a8be04"
+    },
+    {
+      "id": "orb-28",
+      "url": "https://www.shadercn.run/r/orb-28.json",
+      "sha256": "b2221b0de0523a2a06551ce42ab3fa9380fca5506d4c20f6a33fcada6c9d1b45"
+    },
+    {
+      "id": "orb-29",
+      "url": "https://www.shadercn.run/r/orb-29.json",
+      "sha256": "f070f256d4c9ccd92fc3dbcc3a0b8f6ead25cddcaa21db4d66cb0df45e9932ee"
+    },
+    {
+      "id": "orb-30",
+      "url": "https://www.shadercn.run/r/orb-30.json",
+      "sha256": "a42f4599f52011b1d77a31d7f735538dff52830be43f99b1cbe3e120e3916010"
+    },
+    {
+      "id": "orb-31",
+      "url": "https://www.shadercn.run/r/orb-31.json",
+      "sha256": "de3550b8f9a0c0ce729c6212aca5b2275129243d469433d9d9508406154221c9"
+    },
+    {
+      "id": "orb-32",
+      "url": "https://www.shadercn.run/r/orb-32.json",
+      "sha256": "e5c88136e5f1178c915fe7b5fd4cca14f0ff7f8c7add8adc53df6db30252fedf"
+    },
+    {
+      "id": "orb-33",
+      "url": "https://www.shadercn.run/r/orb-33.json",
+      "sha256": "5c4e0e572b9ecddabf395f0a09be342326f9d0d64e2beedb669f291b1d1271dd"
+    }
+  ]
+}

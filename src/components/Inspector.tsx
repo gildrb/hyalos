@@ -12,15 +12,19 @@ function Section({ title, children }: { title: string; children: ComponentChildr
 }
 function NumberControl({ editor, param, label, notify }: Props & { param: NumericKey; label: string }) {
   const value = editor.settings[param], [min, max, step] = RANGES[param];
-  const [draft, setDraft] = useState(String(value));
+  const digits = (String(step).split('.')[1] ?? '').length;
+  const display = String(Number(value.toFixed(digits)));
+  const [draft, setDraft] = useState(display);
+  const typed = useRef(false);
   const observed = useRef(value), staged = useRef(false);
   useLayoutEffect(() => {
     if (value !== observed.current) {
       observed.current = value;
       staged.current = false;
-      setDraft(String(value));
+      setDraft(display);
+      typed.current = false;
     }
-  }, [value]);
+  }, [value, display]);
   const stage = (number: number): void => {
     if (number === editor.settings[param]) return;
     editor.update({ [param]: number }, false);
@@ -29,15 +33,17 @@ function NumberControl({ editor, param, label, notify }: Props & { param: Numeri
   };
   const accept = (): void => {
     try {
-      if (draft.trim()) stage(Number(draft));
+      if (typed.current && draft.trim()) stage(Number(draft));
     } catch (error) { notify(messageOf(error)); }
-    setDraft(String(editor.settings[param]));
+    setDraft(String(Number(editor.settings[param].toFixed(digits))));
+    typed.current = false;
     if (staged.current) {
       staged.current = false;
       editor.commit();
     }
   };
   const type = (text: string): void => {
+    typed.current = true;
     setDraft(text);
     const number = Number(text);
     if (!text.trim() || !Number.isFinite(number) || number < min || number > max || (step === 1 && !Number.isInteger(number))) return;
@@ -79,12 +85,15 @@ export function Inspector({ editor, notify, onAbout }: Props & { onAbout: () => 
         <Section title="Structure">
           <div class="select-control"><label for="select-scene">Form family</label><select id="select-scene" data-select="scene" value={editor.settings.scene} onChange={e => editor.update({ scene: Number(e.currentTarget.value) })}>{SCENES.map((name, i) => <option key={name} value={i}>{name}</option>)}</select></div>
           {control('seed', 'Seed')}<button id="new-seed" class="outline-button" onClick={() => editor.update({ seed: nextSeed(editor.settings.seed) })}>Next variation <Icon name="arrow" /></button>
-          {control('twist', 'Torsion')}{control('spread', 'Openness')}{control('thickness', 'Shell thickness')}{control('nodes', 'Light sources')}
+          {editor.settings.scene !== 9 && control('twist', 'Torsion')}{control('spread', editor.settings.scene === 9 ? 'Form size' : 'Openness')}{editor.settings.scene !== 9 && control('thickness', 'Shell thickness')}{[1, 3, 4, 5, 6].includes(editor.settings.scene) && control('nodes', 'Elements')}
         </Section>
         <Section title="Perforation · ORB-31">
-          {control('holeWarp', 'Warp divisor')}{control('holeFrequency', 'Hole frequency')}{control('holeSoftness', 'Edge softness')}
-          <div hidden={editor.settings.scene === 9}>{control('perforation', 'Perforation')}</div>
-          <p class="control-help">ORB-31 by XorDev · non-commercial; form/light edits apply on Render.</p>
+          {editor.settings.scene !== 9 && control('perforation', 'Perforation')}
+          <fieldset class="dependent-controls" disabled={editor.settings.scene !== 9 && editor.settings.perforation === 0}>
+            {control('holeWarp', 'Warp divisor')}{control('holeFrequency', 'Hole frequency')}{control('holeSoftness', 'Edge softness')}
+          </fieldset>
+          {editor.settings.scene !== 9 && editor.settings.perforation === 0 && <p class="control-help">Increase Perforation to shape the openings.</p>}
+          <p class="control-help">ORB-31 by XorDev · non-commercial; changes update automatically.</p>
         </Section>
         <Section title="Composition">{control('rotation', 'Rotation')}{control('zoom', 'Scale')}{control('panX', 'Position X')}{control('panY', 'Position Y')}{control('yaw', 'Orbit Y')}{control('pitch', 'Orbit X')}</Section>
         <p class="control-help">Double-click a slider to reset it.</p>
@@ -92,12 +101,12 @@ export function Inspector({ editor, notify, onAbout }: Props & { onAbout: () => 
       <div id="panel-light" role="tabpanel" aria-labelledby="tab-light" hidden={tab !== 'light'}>
         <Section title="Material">{control('roughness', 'Roughness')}{control('metallic', 'Metallicity')}{control('detail', 'Surface relief')}</Section>
         <Section title="Glass">
-          {control('transmission', 'Transmission')}{control('ior', 'Refractive index')}{control('dispersion', 'Color dispersion')}{control('absorption', 'Absorption')}
+          {control('transmission', 'Transmission')}<fieldset class="dependent-controls" disabled={editor.settings.transmission * (1 - editor.settings.metallic) === 0}>{control('ior', 'Refractive index')}{control('dispersion', 'Color dispersion')}{control('absorption', 'Absorption')}</fieldset>
           <p class="control-help">Lower metallicity to reveal glass. Absorption uses the material color.</p>
         </Section>
         <Section title="Lighting">
-          {control('power', 'Light power')}{control('radius', 'Source size')}{control('keyAngle', 'Light angle (°)')}{control('fill', 'Fill light')}
-          {control('beam', 'Spotlight mix')}{control('beamAngle', 'Beam half-angle (°)')}
+          {control('power', 'Light power')}{control('emitter', 'Inner light')}<fieldset class="dependent-controls" disabled={editor.settings.emitter === 0}>{control('radius', 'Inner source size')}{![1, 3, 4, 5, 6].includes(editor.settings.scene) && control('nodes', 'Light sources')}</fieldset>{control('keyAngle', 'Light angle (°)')}{control('fill', 'Fill light')}
+          {control('beam', 'Spotlight mix')}<fieldset class="dependent-controls" disabled={editor.settings.beam === 0}>{control('beamAngle', 'Beam half-angle (°)')}</fieldset>
           <p class="control-help">A narrower beam concentrates the light. Haze makes it visible.</p>
         </Section>
         <Section title="Haze">{control('density', 'Density')}{control('anisotropy', 'Forward scattering')}{control('turbulence', 'Texture')}</Section>
@@ -113,9 +122,9 @@ export function Inspector({ editor, notify, onAbout }: Props & { onAbout: () => 
         <Section title="Optics">{control('exposure', 'Exposure')}{control('contrast', 'Contrast')}{control('bloom', 'Lens scattering')}{control('bloomRadius', 'Scattering radius')}{control('grain', 'Film grain')}{control('vignette', 'Vignette')}</Section>
         <Section title="Rendering">
           <div class="select-control"><label for="quality">Preview quality</label><select id="quality" aria-describedby="preview-quality-help" value={editor.quality} onChange={e => editor.setQuality(e.currentTarget.value as Quality)}><option value="draft">Draft</option><option value="balanced">Balanced</option><option value="final">Final</option></select></div>
-          <p class="control-help" id="preview-quality-help">Applied when you choose Render. Export resolution is separate.</p>
+          <p class="control-help" id="preview-quality-help">Preview updates automatically. Export resolution is separate.</p>
           <div class="select-control"><label for="select-sample-grid">Edge sampling</label><select id="select-sample-grid" data-select="sampleGrid" aria-describedby="sample-grid-help" value={editor.settings.sampleGrid} onChange={e => editor.update({ sampleGrid: Number(e.currentTarget.value) })}><option value={1}>1 sample</option><option value={2}>4 samples</option><option value={3}>9 samples</option></select></div>
-          <p class="control-help" id="sample-grid-help">More samples smooth edges and take longer. Applies to exports and Balanced or Final previews when you choose Render.</p>
+          <p class="control-help" id="sample-grid-help">More samples smooth edges and take longer. Applies to exports and Balanced or Final previews after editing pauses.</p>
         </Section>
       </div>
     </fieldset>

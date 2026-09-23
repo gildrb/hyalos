@@ -1,7 +1,7 @@
 import type { Settings, TileRegion, Quality, Vec4 } from '../types.ts';
 import { gamutMap } from '../color.ts';
 import { loopPhase } from '../model.ts';
-export const QUALITY: Record<Quality, [number, number, number]> = { draft: [64, 12, 10], balanced: [104, 24, 16], final: [160, 48, 24] };
+export const QUALITY: Record<Quality, [number, number, number]> = { draft: [80, 12, 10], balanced: [144, 24, 16], final: [256, 48, 24] };
 /** Build one host-shareable, explicitly aligned WGSL uniform struct. */
 export function uniforms(s: Settings, width: number, height: number, tile: TileRegion, quality: Quality = 'balanced'): Record<string, Vec4> {
   const rad = Math.PI / 180;
@@ -14,7 +14,7 @@ export function uniforms(s: Settings, width: number, height: number, tile: TileR
     motion: [s.rotation * rad, loopPhase(s.time, s.duration), s.zoom, s.panX],
     light: [s.power, s.radius, s.keyAngle * rad, s.fill],
     medium: [s.density, s.anisotropy, s.turbulence, s.beam], // Beam: fraction of key power directed into the cone.
-    material: [s.roughness, s.metallic, 18, s.detail],
+    material: [s.roughness, s.metallic, s.emitter, s.detail],
     background: [...gamutMap(s.palette.background), s.exposure],
     metal: [...gamutMap(s.palette.metal), s.contrast],
     energy: [...gamutMap(s.palette.energy), s.bloom],

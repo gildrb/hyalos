@@ -1,0 +1,115 @@
+// Compiled from unchanged shadercn orb-31 using TypeGPU.
+// Shader by XorDev (https://x.com/XorDev), ported with permission.
+// Non-commercial use only, with attribution. Preserve this notice.
+// Source SHA-256: 13281ce0ac952dc3fb64c5729877a413e3d381d837c4206764e5cd8ed3f7f375
+struct orb31Params {
+  anim: f32,
+  inputVol: f32,
+  mouse: vec2f,
+  outputVol: f32,
+  p_alphaGain: f32,
+  p_ambient: f32,
+  p_camDist: f32,
+  p_edgeFade: f32,
+  p_fov: f32,
+  p_freqSwing: f32,
+  p_maxDist: f32,
+  p_radius: f32,
+  p_rayFalloff: f32,
+  p_rayGain: f32,
+  p_smoothK: f32,
+  p_smoothSwing: f32,
+  p_speed: f32,
+  p_stepScale: f32,
+  p_surfaceLit: f32,
+  p_sweepRate: f32,
+  p_swell: f32,
+  p_warp: f32,
+  p_warpFreq: f32,
+  p_warpSwing: f32,
+  res: vec2f,
+  time: f32,
+}
+
+@group(0) @binding(0) var<uniform> params: orb31Params;
+
+fn coronaRot(a: f32) -> mat3x3f {
+  return mat3x3f(cos(a), (sin((a / 2f)) * sin(a)), (sin(a) * cos((a / 2f))), 0f, cos((a / 2f)), -(sin((a / 2f))), -(sin(a)), (sin((a / 2f)) * cos(a)), (cos((a / 2f)) * cos(a)));
+}
+
+fn smin(a: f32, b: f32, k: f32) -> f32 {
+  let h = clamp((0.5f + ((0.5f * (b - a)) / k)), 0f, 1f);
+  return (mix(b, a, h) - ((k * h) * (1f - h)));
+}
+
+fn coronaSDF(p: vec3f, shellRadius: f32, warpAmount: f32, warpFreqNow: f32, smoothKNow: f32) -> f32 {
+  var p1 = p;
+  let w = (sin((p.xzy * warpFreqNow)) / max(warpAmount, 1e-3f));
+  p1 = vec3f((p1.x + w.z), (p1.y + w.y), (p1.z + w.x));
+  return -(smin((length(p1) - shellRadius), (shellRadius - length(p)), smoothKNow));
+}
+
+fn shellColor(p: vec3f, globalInvRot: mat3x3f, shellRadius: f32, warpAmount: f32, warpFreqNow: f32, smoothKNow: f32) -> vec3f {
+  const eps = 1e-3;
+  let normal = (globalInvRot * normalize(vec3f((coronaSDF((p + vec3f(eps, 0f, 0f)), shellRadius, warpAmount, warpFreqNow, smoothKNow) - coronaSDF((p - vec3f(eps, 0f, 0f)), shellRadius, warpAmount, warpFreqNow, smoothKNow)), (coronaSDF((p + vec3f(0f, eps, 0f)), shellRadius, warpAmount, warpFreqNow, smoothKNow) - coronaSDF((p - vec3f(0f, eps, 0f)), shellRadius, warpAmount, warpFreqNow, smoothKNow)), (coronaSDF((p + vec3f(0f, 0f, eps)), shellRadius, warpAmount, warpFreqNow, smoothKNow) - coronaSDF((p - vec3f(0f, 0f, eps)), shellRadius, warpAmount, warpFreqNow, smoothKNow)))));
+  var next = (vec3f(1) - ((normal * 0.5f) + 0.5f));
+  next = vec3f((dot(next, vec3f(1)) / 3f));
+  return (vec3f(1.024999976158142) - (next * next));
+}
+
+fn coronaRender(fragCoord: vec2f, globalRot: mat3x3f, globalInvRot: mat3x3f, shellRadius: f32, warpAmount: f32, warpFreqNow: f32, smoothKNow: f32, rayGain: f32) -> vec4f {
+  let u = (&params);
+  let uv = (((fragCoord * 2f) - (*u).res) / min((*u).res.x, (*u).res.y));
+  var ro = vec3f(0f, 0f, -((*u).p_camDist));
+  var rd = normalize(vec3f(uv, (*u).p_fov));
+  ro = (globalRot * ro);
+  rd = (globalRot * rd);
+  var p = ro;
+  var dist = 1f;
+  var t = 0f;
+  var godrays = 0f;
+  for (var i = 0u; i < 256u; i += 1u) {
+    if (((dist <= 5e-3f) || (t >= (*u).p_maxDist))) {
+      break;
+    }
+    p = (ro + (rd * t));
+    dist = (coronaSDF(p, shellRadius, warpAmount, warpFreqNow, smoothKNow) / max((*u).p_stepScale, 0.5f));
+    let fog = select(1f, smoothstep(0f, 0.5f, coronaSDF((normalize(p) * shellRadius), shellRadius, warpAmount, warpFreqNow, smoothKNow)), (length(p) > shellRadius));
+    godrays += ((rayGain / (1f + (dot(p, p) * (*u).p_rayFalloff))) * fog);
+    t += dist;
+  }
+  var col = vec3f((*u).p_ambient);
+  if ((t < (*u).p_maxDist)) {
+    col = (shellColor(p, globalInvRot, shellRadius, warpAmount, warpFreqNow, smoothKNow) * (*u).p_surfaceLit);
+  }
+  col = (col + godrays);
+  return vec4f(col, 1f);
+}
+
+struct orb31Fragment_Input {
+  @location(0) uv: vec2f,
+}
+
+@fragment fn orb31Fragment(_arg_0: orb31Fragment_Input) -> @location(0) vec4f {
+  let u = (&params);
+  let fragCoord = (_arg_0.uv * (*u).res);
+  let orbUv = (((fragCoord * 2f) - (*u).res) / min((*u).res.x, (*u).res.y));
+  let animTime = (*u).p_speed;
+  let globalRot = coronaRot(animTime);
+  let globalInvRot = transpose(coronaRot(animTime));
+  let sweepPhase = sin((*u).p_sweepRate);
+  let shellRadius = ((*u).p_radius + ((*u).p_swell * (*u).inputVol));
+  var warpAmount = (((*u).p_warp + ((*u).p_warpSwing * sweepPhase)) * ((1f - (0.25f * (*u).inputVol)) - (0.15f * (*u).outputVol)));
+  warpAmount = max(warpAmount, 0.05f);
+  let rayGain = ((*u).p_rayGain * ((0.7f + (0.8f * (*u).outputVol)) + (0.3f * (*u).inputVol)));
+  let warpFreqNow = max(((*u).p_warpFreq + ((*u).p_freqSwing * sweepPhase)), 0.05f);
+  let smoothKNow = max(((*u).p_smoothK + ((*u).p_smoothSwing * sweepPhase)), 5e-3f);
+  let acc = coronaRender(fragCoord, globalRot, globalInvRot, shellRadius, warpAmount, warpFreqNow, smoothKNow, rayGain);
+  var col = clamp(acc.xyz, vec3f(), vec3f(1));
+  let lum = dot(col, vec3f(0.2125999927520752, 0.7152000069618225, 0.0722000002861023));
+  var a = clamp((lum * (*u).p_alphaGain), 0f, 1f);
+  let fade = (1f - smoothstep((*u).p_edgeFade, 1f, length(orbUv)));
+  col = (col * fade);
+  a *= fade;
+  return vec4f(col, a);
+}

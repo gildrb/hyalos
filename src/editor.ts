@@ -12,12 +12,13 @@ const PREVIEW_LIMITS = {
   final: { side: 1440, pixels: 1000000 },
 };
 const PREVIEW_INTERVAL = 1000 / 15;
+const EDIT_DEBOUNCE = 300;
 
 /** The editor and GPU have separate lifetimes. Importing this module never initializes WebGPU. */
 export class Editor {
   settings: Settings;
   selected = 'the-gift';
-  quality: Quality = 'balanced';
+  quality: Quality = 'draft';
   status: RendererState = 'idle';
   startupPhase: StartupPhase = 'idle';
   refining = false;
@@ -42,9 +43,9 @@ export class Editor {
   private previewTimer: number | undefined;
   private previewAbort: AbortController | null = null;
   private nextPreviewAt = 0;
+  private previewDueAt = 0;
   private interacting = false;
   private previewPending: Promise<void> | null = null;
-  // A staged revision is not permission to submit GPU work.
   private previewRequested = false;
   private revision = 0;
   private exportAbort: AbortController | null = null;
@@ -76,7 +77,9 @@ export class Editor {
   get renderQueued(): boolean { return this.status === 'ready' && this.previewRequested && !this.refining; }
   private capture(): HistoryEntry { return { settings: structuredClone(this.settings), selected: this.selected }; }
   private findStudy(settings: Settings): string {
-    return PRESETS.find(p => JSON.stringify(preset(p.id)) === JSON.stringify(settings))?.id ?? 'the-gift';
+    const exact = PRESETS.find(p => JSON.stringify(preset(p.id)) === JSON.stringify(settings));
+    const family = PRESETS.filter(p => preset(p.id).scene === settings.scene);
+    return exact?.id ?? family.find(p => preset(p.id).seed === settings.seed)?.id ?? family[0]?.id ?? 'the-gift';
   }
   private emit(): void { this.listeners.forEach(listener => listener()); }
   private persist(): void {
@@ -151,8 +154,15 @@ export class Editor {
     if (this.quality === quality) return;
     this.quality = quality; this.invalidate(); this.emit();
   }
+  cancelPreview(): void {
+    this.previewRequested = false;
+    this.suspendPreview();
+    this.emit();
+  }
   renderPreview(): void {
-    if (this.status !== 'ready' || this.busy || this.refining || this.renderQueued) return;
+    if (this.status !== 'ready' || this.busy || this.refining) return;
+    clearTimeout(this.previewTimer); this.previewTimer = undefined;
+    this.previewDueAt = 0;
     this.previewRequested = true;
     this.schedule();
     this.emit();
@@ -246,8 +256,9 @@ export class Editor {
           throw signal.reason ?? new Error('Renderer connection superseded.');
         }
         this.renderer = renderer;
-        // Initialization authorizes no frame. Only Render may request a preview.
         this.status = 'ready'; this.startupPhase = 'ready';
+        this.previewRequested = true; this.previewDueAt = performance.now();
+        this.schedule();
         this.emit();
       };
       await Promise.race([startup(), cancelled]);
@@ -266,13 +277,15 @@ export class Editor {
     this.connectionAbort?.abort(error); this.connectionAbort = null;
     this.renderer?.dispose(); this.renderer = null;
     this.renderedSettings = null;
-    this.status = 'unavailable'; this.startupPhase = 'idle'; this.refining = false; this.error = messageOf(error);
+    this.status = 'unavailable'; this.startupPhase = 'idle'; this.refining = false; this.error = /requestAdapter.*null/i.test(messageOf(error)) ? 'The browser cannot access its GPU. Save your recipe, restart the browser, then reconnect. Check hardware acceleration if the problem persists.' : messageOf(error);
     this.previewRequested = false; this.pendingChanges = true;
     this.emit();
   }
   invalidate(): void {
     this.revision++; this.pendingChanges = true;
-    this.previewRequested = false; this.suspendPreview();
+    this.previewRequested = true; this.suspendPreview();
+    this.previewDueAt = performance.now() + EDIT_DEBOUNCE;
+    this.schedule();
   }
   private suspendPreview(): void {
     clearTimeout(this.previewTimer);
@@ -282,7 +295,7 @@ export class Editor {
   }
   private schedule(): void {
     if (!this.previewRequested || this.previewTimer !== undefined || this.previewPending || !this.canvas || !this.renderer || this.status !== 'ready' || document.hidden || this.busy) return;
-    this.previewTimer = window.setTimeout(this.tick, Math.max(0, Math.ceil(this.nextPreviewAt - performance.now())));
+    this.previewTimer = window.setTimeout(this.tick, Math.max(0, Math.ceil(Math.max(this.nextPreviewAt, this.previewDueAt) - performance.now())));
   }
   private pixelRatio(): number {
     return Number.isFinite(window.devicePixelRatio) && window.devicePixelRatio > 0 ? Math.min(1, window.devicePixelRatio) : 1;
@@ -309,7 +322,6 @@ export class Editor {
     const abort = new AbortController();
     this.previewAbort = abort;
     this.refining = true; this.emit();
-    const started = performance.now();
     // The promise covers every scene chunk and the final postprocess submission.
     let pending: Promise<void> | undefined;
     try {
@@ -327,8 +339,9 @@ export class Editor {
       }
     } finally {
       const finished = performance.now();
-      // Never exceed 15 fps; even slow/aborted frames get at least their elapsed time off.
-      this.nextPreviewAt = Math.max(started + PREVIEW_INTERVAL, finished + (finished - started));
+      // The renderer already rests after each GPU submission. A second full-frame
+      // cooldown would make the next edit wait as long as the previous glass render.
+      this.nextPreviewAt = finished + PREVIEW_INTERVAL;
       if (this.previewAbort === abort) this.previewAbort = null;
       if (this.previewPending === pending) this.previewPending = null;
       if (serial === this.generation && renderer === this.renderer) {
@@ -340,7 +353,7 @@ export class Editor {
     this.previewTimer = undefined;
     if (document.hidden || this.busy || !this.renderer || this.status !== 'ready' || this.previewPending) return;
     const now = performance.now();
-    if (now < this.nextPreviewAt) { this.schedule(); return; }
+    if (now < Math.max(this.nextPreviewAt, this.previewDueAt)) { this.schedule(); return; }
     if (!this.previewRequested) return;
     const renderer = this.renderer, serial = this.generation;
     void this.draw().then(() => {
@@ -354,6 +367,7 @@ export class Editor {
     if (!this.renderer || this.status !== 'ready' || this.busy) throw new Error('Renderer unavailable or busy.');
     if (this.interacting) this.commit();
     const renderer = this.renderer, snapshot = structuredClone(this.settings), serial = this.generation;
+    const resumePreview = this.previewRequested;
     this.busy = true;
     this.previewRequested = false;
     this.suspendPreview();
@@ -371,7 +385,11 @@ export class Editor {
       if (serial !== this.generation || renderer !== this.renderer) throw new Error('Renderer changed during export.');
       return result;
     } finally {
-      this.busy = false; this.exportAbort = null; this.emit();
+      this.busy = false; this.exportAbort = null;
+      if (resumePreview && this.pendingChanges && serial === this.generation && renderer === this.renderer) {
+        this.previewRequested = true; this.previewDueAt = performance.now() + EDIT_DEBOUNCE; this.schedule();
+      }
+      this.emit();
     }
   }
   exportPNG(width = 1920, height = 1080): Promise<Blob> { return this.exportImage(width, height, 'image/png'); }

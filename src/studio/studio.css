@@ -1,0 +1,50 @@
+.glass-editor{background:oklch(.13 .004 260)}
+.glass-workspace-name{font-size:14px;color:var(--muted);border-left:1px solid var(--line);padding-left:20px}
+.glass-workspace{display:grid;grid-template-columns:minmax(0,1fr) 290px;flex:1;min-height:0}
+.glass-view{display:flex;flex-direction:column;min-width:0;min-height:0;padding:0 24px}
+.glass-view-toolbar{min-height:64px;display:flex;justify-content:space-between;align-items:center;gap:16px;font-size:14px}
+.glass-view-toolbar strong{font-weight:500}.glass-view-subtitle{color:var(--muted)}
+.glass-live{font-size:12px;color:var(--muted)}
+.glass-canvas-wrap{position:relative;min-height:0;flex:1;overflow:hidden;border-radius:10px;border:1px solid var(--line);background:oklch(.1 .004 260)}
+.glass-canvas{width:100%;height:100%;display:block;touch-action:none;cursor:grab}.glass-canvas:active{cursor:grabbing}
+.glass-canvas-footer{min-height:56px;display:flex;gap:12px;justify-content:space-between;align-items:center;color:var(--muted);font-size:12px}
+.glass-inspector{border-left:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;overflow:auto}
+.glass-inspector .panel-header{height:64px;padding:0 24px}
+.glass-fields{border:0;margin:0;padding:0 24px;min-width:0;display:flex;flex-direction:column;gap:24px}
+.glass-field{display:flex;flex-direction:column;gap:10px;font-size:13px;color:var(--muted)}
+.glass-field select{width:100%;min-height:42px;border:1px solid var(--line);background:var(--raised);border-radius:6px;color:var(--text);padding:8px 12px}
+.glass-shape-picker{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:-10px}
+.glass-shape-picker button{min-height:78px;border:1px solid var(--line);border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;font-size:11px;color:var(--muted)}
+.glass-shape-picker button[aria-pressed=true]{background:var(--raised);border-color:var(--muted);color:var(--text)}
+.glass-shape-symbol{display:block;width:24px;height:24px;border:2px solid currentColor;border-radius:50%;transform:rotate(-25deg)}.glass-shape-symbol.knot{border-radius:35% 70% 35% 70%;box-shadow:inset 0 0 0 4px var(--panel)}.glass-shape-symbol.gyroid{border-style:dashed}.glass-shape-symbol.droplets{border-radius:60% 30% 65% 35%;width:20px;box-shadow:9px 5px 0 -4px currentColor}
+.glass-switches{display:flex;flex-direction:column;gap:18px}.glass-switches label{display:flex;align-items:center;justify-content:space-between;font-size:13px}.glass-switches input{width:18px;height:18px;accent-color:var(--text);cursor:pointer}
+.glass-help{font-size:12px;line-height:1.7;color:var(--muted);margin:0}
+.glass-credit{margin-top:auto;padding:32px 24px 24px;font-size:12px;color:var(--muted);line-height:1.7}.glass-credit a{color:var(--text)}.glass-credit p{margin-bottom:0}
+.glass-message{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;gap:12px;background:var(--bg)}.glass-message p{max-width:420px;line-height:1.6;color:var(--muted)}
+.glass-notice{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);max-width:calc(100vw - 32px);padding:12px 16px;background:var(--raised);border:1px solid var(--line);border-radius:8px;z-index:40;display:flex;align-items:center;gap:16px;box-shadow:0 8px 40px #0005}.glass-notice button{font-size:20px}
+@media(max-width:850px){.glass-workspace{grid-template-columns:minmax(0,1fr) 240px}.glass-fields{padding:0 16px}.glass-inspector .panel-header{padding:0 16px}.glass-view{padding:0 16px}.glass-workspace-name{display:none}.glass-editor .header-actions{gap:12px}.glass-canvas-footer span{max-width:220px;line-height:1.6}}
+@media(max-width:600px){.glass-editor{overflow:auto;height:100dvh;min-height:0}.glass-editor .topbar{align-items:flex-start}.glass-editor .header-actions{gap:8px 14px}.glass-editor .header-actions a,.glass-editor .header-actions .text-button{font-size:12px}.glass-workspace{display:flex;flex-direction:column;min-height:0;flex:none}.glass-view{min-height:480px}.glass-canvas-wrap{height:340px;flex:none}.glass-inspector{border-left:0;border-top:1px solid var(--line);overflow:visible}.glass-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.glass-shape-picker{grid-column:1/-1;margin:0;order:-1}.glass-help{grid-column:1/-1}.glass-credit{padding:24px 16px}.glass-live{white-space:nowrap}}
+
+.glass-shape-symbol.vesper{border-width:0 3px 0 0;transform:rotate(25deg);height:30px}.glass-shape-symbol.reliquary{border-radius:25%;transform:rotate(30deg);box-shadow:3px 2px 0 -1px currentColor}
+
+.glass-finish{border-top:1px solid var(--line);padding-top:20px}.glass-finish summary{cursor:pointer;color:var(--text);font-size:13px;margin-bottom:20px}.glass-finish-enable{display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-bottom:20px}.glass-finish-enable input{width:18px;height:18px;accent-color:var(--text)}
+.glass-range{display:block;margin:16px 0;color:var(--muted);font-size:12px}.glass-range span{display:flex;justify-content:space-between;gap:12px}.glass-range output{font-variant-numeric:tabular-nums;color:var(--text)}.glass-range input{width:100%;height:28px;margin:4px 0 0;accent-color:var(--text);cursor:pointer}.glass-range input:disabled{opacity:.3}.glass-finish .text-button{font-size:12px}
+.glass-shape-symbol.trefoil{border-radius:30% 65%;transform:rotate(35deg);box-shadow:inset 0 0 0 4px var(--panel)}.glass-shape-symbol.mobius{border-radius:30% 70%;width:28px;height:16px}.glass-shape-symbol.schwarz{border-style:dotted;border-width:4px}.glass-shape-symbol.petal{border-radius:40% 40% 40% 0;transform:rotate(45deg)}
+@media(max-width:600px){.glass-finish{grid-column:1/-1}}
+
+.glass-shape-picker button{min-height:64px;gap:8px}.glass-inspector .panel-header{position:sticky;top:0;background:var(--panel);z-index:2;flex-shrink:0}
+
+.glass-export{border-top:1px solid var(--line);padding-top:20px}.glass-export summary{cursor:pointer;font-size:13px;margin-bottom:18px}.glass-export-dimensions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0 4px}.glass-export-dimensions label{font-size:12px;color:var(--muted)}.glass-export-dimensions input{display:block;width:100%;min-width:0;background:var(--raised);color:var(--text);border:1px solid var(--line);border-radius:5px;padding:10px;margin-top:8px}.glass-export .text-button{font-size:12px}.glass-export .glass-help{margin-top:8px}@media(max-width:600px){.glass-export{grid-column:1/-1}}
+
+.glass-canvas-host{flex:1;min-height:0;min-width:0;display:grid;place-items:center;container-type:size}.glass-canvas-host .glass-canvas-wrap{width:min(100%,calc(100cqh * var(--ratio)));height:auto;aspect-ratio:var(--ratio);flex:none;max-height:100%}.glass-canvas-host .glass-canvas{position:absolute;inset:0}
+@media(max-width:600px){.glass-canvas-host{flex:none;height:360px}.glass-canvas-host .glass-canvas-wrap{height:auto}.glass-view{min-height:480px}}
+
+.glass-orbs{border-top:1px solid var(--line);padding-top:20px;min-width:0}.glass-orbs>summary{font-size:13px;cursor:pointer;margin-bottom:18px}.glass-orbs .glass-field{margin-bottom:16px}.glass-orbs .glass-help{margin:12px 0}.glass-orbs select{max-width:100%;text-overflow:ellipsis}.orb-parameters{margin:20px 0}.orb-parameters summary{font-size:12px;color:var(--muted);cursor:pointer}.glass-orb-color{display:flex;align-items:center;justify-content:space-between;font-size:12px;margin:14px 0}.glass-orb-color input{width:36px;height:28px;padding:0;border:1px solid var(--line);background:transparent}.glass-orb-credit{font-size:11px;color:var(--muted)}@media(max-width:600px){.glass-orbs{grid-column:1/-1}}
+
+.orb-gallery{margin:16px 0}.orb-gallery summary{font-size:12px;cursor:pointer;color:var(--muted)}.orb-gallery-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;max-height:340px;overflow:auto;margin-top:12px;padding:2px}.orb-gallery-grid button{border:1px solid var(--line);border-radius:5px;padding:5px;font-size:10px}.orb-gallery-grid button[aria-pressed=true]{border-color:var(--text);background:var(--raised)}.orb-gallery-grid img{width:100%;aspect-ratio:1;display:block;object-fit:contain}.orb-gallery-grid span{display:block;padding-top:5px}
+
+.glass-custom-colors summary{font-size:13px;color:var(--muted);cursor:pointer}.glass-shape-symbol.helix{border-radius:50% 0;width:14px;height:28px}.glass-shape-symbol.prism{border-radius:0;transform:rotate(45deg)}.glass-shape-symbol.wave{border-radius:35% 65% 40% 55%}.glass-shape-symbol.ribbon{width:28px;height:14px;border-radius:30% 60%}.glass-shape-symbol.pearl{box-shadow:7px 4px 0 -4px currentColor}.glass-shape-symbol.torus{border-width:5px}
+
+.glass-environment-presets { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px; margin: 12px 0; }
+.glass-environment-presets .text-button { padding: 8px 4px; border: 1px solid #343434; border-radius: 5px; background: #202020; text-align: center; }
+.glass-environment-presets .text-button:hover { background: #303030; }

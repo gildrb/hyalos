@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "vp dev",
-    "build": "npm run shaders:orb31 && npm run typecheck && vp build",
+    "build": "npm run shaders:orb31 && npm run shaders:orbs && npm run typecheck && vp build",
     "preview": "vp preview",
     "check": "vp check",
     "test": "node --experimental-strip-types --test tests/*.test.mjs",
@@ -19,7 +19,9 @@
     "typecheck": "tsc --noEmit",
     "test:gpu": "playwright test --project=gpu --config playwright.gpu.config.ts",
     "shaders:orb31": "node scripts/compile-orb31.mjs",
-    "serve": "node scripts/serve.mjs"
+    "serve": "node scripts/serve.mjs",
+    "render:studies": "node scripts/render-studies.mjs",
+    "shaders:orbs": "node scripts/compile-orbs.mjs"
   },
   "dependencies": {
     "preact": "10.29.8",
@@ -30,6 +32,7 @@
     "@playwright/test": "1.58.2",
     "@types/node": "^22.18.0",
     "@webgpu/types": "0.1.69",
+    "pngjs": "7.0.0",
     "typescript": "5.9.3",
     "unplugin-typegpu": "0.12.3",
     "vite-plus": "0.3.3"

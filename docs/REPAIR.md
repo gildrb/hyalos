@@ -13,3 +13,22 @@ Before the first completed explicit preview, the canvas area retains a labeled s
 Corona and optional perforation use the attributed non-commercial ORB-31 geometry by XorDev, not a replacement poster or a post-processing hole mask. The exact installed TypeGPU helpers are generated into `src/shaders/vendor/orb31.wgsl` and imported into the shared preview/export shader. The four controls, all-fields-absent recipe migration, unchanged uniform layout and geometry/license boundaries are documented in [RENDERING.md](RENDERING.md) and [AGENT_API.md](AGENT_API.md). These source contracts are not evidence of a completed GPU render.
 
 Production regression tests cover UTF-8, all images, CSS, UI execution, missing CSS and chunks, root/subdirectory deployment, control updates, undo/redo, saved time and the responsive study drawer. Read VALIDATION.md for actual executed results rather than treating source-level checks as GPU evidence.
+
+## Smaller pipelines and recoverable composition
+
+Startup now prewarms only the display pass. The active form and opaque/glass surface pipeline compile on first explicit render or export and remain cached. The UI exposes preview quality and cancellation directly beside Render. Numeric fields display useful decimal precision without committing a rounded value merely on focus/blur. Saved modified recipes select the corresponding family/seed rather than an unrelated default poster.
+
+A browser whose GPU process has already crashed may return a null adapter even after application code is fixed. The error now describes saving the recipe and restarting the browser; Reconnect retries device acquisition without reloading settings. This is a recovery instruction, not a promise that JavaScript can reset a crashed driver.
+
+
+## Verified Glass Sculpture integration
+
+The official nine-file example is preserved, with CLI verification recorded in `glass-sculpture/PROVENANCE.json`. `/?glass` mounts its adapted vGPU pipeline inside the existing Preact app. Original studies and their recipes remain at `/?classic`. The original example shapes are accompanied by Vesper and Reliquary, authored toward the user's blue/silver reference. Preview resolution and frame starts are bounded; all settings update the live render. Exports use the same shader and preserve canvas framing, with a scoped GPU context disposed in finally. The original editor also now automatically previews edits after a debounce.
+
+## Expanded Glass studio, 2026-09-23
+
+The current implementation supersedes earlier fixed-size export and two-shape composition notes: 15 forms, 33 source shadercn materials, persistent controls, reversed horizontal orbit, 8× macro lens, custom glass and light colors, configurable effects and tiled 4K/custom PNG export. The shadercn programs are projected animated materials, not arbitrary-shape physical volume simulations. Zero-strength materials bypass sampling; full-metal shading skips transmission; bounded HDR prevents overflow blocks. See README and RENDERING for the current behavior.
+
+## Main workspace and environment controls
+
+Glass Sculptures is now the sole mounted interface, independent of old workspace preferences and query flags. Retired source is retained unmounted. The environment exposes key/rim/gradient/beam/card/grade colors and background/card/beam intensity. New scenes are neutral; saved scenes preserve choices and offer a Neutral preset to remove environmental blue. The atmosphere is independent of the finish master switch.

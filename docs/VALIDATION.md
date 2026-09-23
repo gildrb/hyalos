@@ -111,3 +111,19 @@ npm run test:gpu
 ```
 
 Missing adapters, wrong pixel buffers and failed GPU initialization must fail the GPU suite, never silently skip or pass. The publication baseline could not reach the package registry locally and used GitHub Actions for full build/browser evidence; the later qualification above includes local builds and isolated hardware execution.
+
+## 2026-09-23 Glass Sculpture studio
+
+- Official CLI verified the nine upstream files; provenance retained. All 33 orb programs compiled and produced nonzero native GPU images. All 15 sculpture modes rendered on the native adapter.
+- Native shared tiled export produced a 3840 × 2160 PNG. Actual Helium WebGPU preview was inspected through Computer; a zero-strength material/full-metal close-up no longer showed the observed black blocks after the shading correction.
+- IAB, where WebGPU is unavailable, verified settings persistence across shape selection/reload. This does not qualify GPU rendering.
+- Existing 112 CPU tests and 10 browser regressions passed; browser regressions cover the original editor at root/subdirectory URLs, not exhaustive new-studio GPU behavior. No new tests were authored.
+- Native/source-material evidence does not establish exact physical equivalence between a projected orb and a three-dimensional volumetric simulation.
+
+Computer inspection also confirmed active ORB-09 emission on the live Helium sculpture and a successful PNG export notice. Downloaded Ribbon PNG headers were independently checked: 3840 × 2160. The expanded studio UI fit a 390-pixel viewport; custom glass color, Wave, 100% render scale and 4K dimensions survived shape selection and reload.
+
+The user-supplied Knot PNG was reproduced from its embedded recipe. After conservative twisted-field bounds, finer normals/hit tolerance and crossing refinement, the black cutouts and repeating overstep ridges disappeared in the same-camera native export. Preview pixel cap was raised to 1920 per axis / 2,073,600 pixels and orb material resolution to 768 for close-ups.
+
+## Glass Sculptures becomes the main workspace
+
+The root entry now mounts only StudioApp; the retired Studies UI is no longer reachable via query or saved workspace. Environment colors and strengths are normalized, stored in recipes, and passed to both preview/export shaders. Native GPU rendered the neutral scene. Computer verified root startup, environment edits surviving reload, and absence of the legacy link. Build, typecheck, lint and 112 CPU checks pass. The existing browser suite has 4 passes and 6 failures because those six require the removed legacy window.hyalos/editor/drawer interface. Tests were not rewritten under the repository's no-new-tests instruction; these failures are not represented as new-studio coverage.

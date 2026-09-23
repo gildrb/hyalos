@@ -2,7 +2,7 @@
   "format": "hyalos-visual",
   "version": 1,
   "engine": "hyalos-prometheus/1",
-  "shaderHash": "3e5a4965d496ee4e6d50fa2273117bfa5a4692fda365f56bbd2aed05b8f917a6",
+  "shaderHash": "d89dd9990247468808ca43639fa70db3ebcbc7c6645aced70f4e7c101421832c",
   "settings": {
     "seed": 310031,
     "scene": 9,
@@ -21,13 +21,14 @@
     "yaw": -18,
     "pitch": 12,
     "nodes": 3,
-    "roughness": 0.3,
-    "metallic": 0.25,
+    "roughness": 0.14,
+    "metallic": 0.78,
     "detail": 0,
     "transmission": 0,
     "ior": 1.46,
     "dispersion": 0,
     "absorption": 0.28,
+    "emitter": 0,
     "power": 110,
     "radius": 0.06,
     "keyAngle": -25,
@@ -41,7 +42,7 @@
     "contrast": 1.08,
     "bloom": 0.075,
     "bloomRadius": 4,
-    "grain": 0.012,
+    "grain": 0.005,
     "vignette": 0.2,
     "spacing": 3.5,
     "dotSize": 0.35,
@@ -51,9 +52,9 @@
     "duration": 12,
     "palette": {
       "background": [
-        0.045,
-        0.008,
-        240
+        0.075,
+        0.012,
+        250
       ],
       "metal": [
         0.92,
@@ -61,8 +62,8 @@
         218
       ],
       "energy": [
-        0.93,
-        0.048,
+        0.96,
+        0.03,
         220
       ]
     }

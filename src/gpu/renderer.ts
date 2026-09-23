@@ -1,19 +1,19 @@
-import type { Surface, Target } from 'vgpu';
+import type { Effect, Gpu, Surface, Target } from 'vgpu';
 import type { Renderer, RendererInitOptions, Settings, TileRegion, Quality } from '../types.ts';
 import { init, effect, frame, surface, target, texture, sampler, storage } from 'vgpu';
-import { SCENE_SHADER, POST_SHADER, shaderFingerprint } from './shaders.ts';
+import { sceneShader, POST_SHADER, shaderFingerprint } from './shaders.ts';
 import { uniforms } from './uniforms.ts';
 import { DEFAULT } from '../model.ts';
 
 /** One vGPU context, persistent pipelines, reusable HDR targets. No WebGL fallback. */
-export async function createRenderer(canvas: HTMLCanvasElement, onError: (error: unknown) => void = console.error, options: RendererInitOptions = {}): Promise<Renderer> {
+export async function createRenderer(canvas: HTMLCanvasElement | null, onError: (error: unknown) => void = console.error, options: RendererInitOptions & { gpu?: Gpu } = {}): Promise<Renderer> {
   const { signal, onPhase } = options;
   signal?.throwIfAborted();
   onPhase?.('loading');
   signal?.throwIfAborted();
-  if (!globalThis.isSecureContext) throw new Error('WebGPU needs HTTPS or localhost. An HTTP Tailnet address is not sufficient.');
-  if (!navigator.gpu) throw new Error('WebGPU is not available in this browser. Use a WebGPU-capable browser with hardware acceleration enabled.');
-  const gpu = await init({ powerPreference: 'low-power' });
+  if (!options.gpu && !globalThis.isSecureContext) throw new Error('WebGPU needs HTTPS or localhost. An HTTP Tailnet address is not sufficient.');
+  if (!options.gpu && !navigator.gpu) throw new Error('WebGPU is not available in this browser. Use a WebGPU-capable browser with hardware acceleration enabled.');
+  const gpu = options.gpu ?? await init({ powerPreference: 'low-power' });
   // Device acquisition is not cancellable in vGPU/WebGPU. Release a late device
   // before it can acquire the canvas or create any renderer resources.
   if (signal?.aborted) { gpu.dispose(); signal.throwIfAborted(); }
@@ -45,8 +45,8 @@ export async function createRenderer(canvas: HTMLCanvasElement, onError: (error:
     signal?.throwIfAborted();
     onPhase?.('compiling');
     signal?.throwIfAborted();
-    const screen = surface(gpu, canvas, { autoResize: false, dpr: 1, size: [320, 180], alphaMode: 'opaque', colorSpace: 'srgb' });
-    ownedSurface = screen;
+    const screen = canvas ? surface(gpu, canvas, { autoResize: false, dpr: 1, size: [320, 180], alphaMode: 'opaque', colorSpace: 'srgb' }) : target(gpu, { size: [320, 180], format: 'rgba8unorm' });
+    if (canvas) ownedSurface = screen as Surface;
     // Independent small attachments bound scene work without relying on scissors.
     const chunk = target(gpu, { size: [128, 128], format: 'rgba16float', label: 'scene-chunk' });
     const sampleSums = storage(gpu, 128 * 128 * 16, 'read-write');
@@ -54,12 +54,12 @@ export async function createRenderer(canvas: HTMLCanvasElement, onError: (error:
     const output = target(gpu, { size: [1, 1], format: 'rgba8unorm', label: 'export-display' });
     const linearSampler = sampler(gpu, { minFilter: 'linear', magFilter: 'linear', addressModeU: 'clamp-to-edge', addressModeV: 'clamp-to-edge' });
     const initial = uniforms(DEFAULT, 320, 180, { left: 0, top: 0, width: 320, height: 180 });
-    const scene = effect(gpu, SCENE_SHADER, { label: 'promethean-radiance', set: { u: initial, sampleSums } });
+    const scenes = new Map<string, Effect>();
     // Assemble exact HDR texels before the one full-tile optical pass.
     const post = effect(gpu, POST_SHADER, { label: 'optics-and-print', set: { u: initial, sceneTex: hdr, linearSampler } });
     // First image needs only the scene and canvas signatures. Export prewarming
     // stays on the export path instead of holding the first live frame hostage.
-    const [hash] = await Promise.all([shaderFingerprint(), scene.compile(chunk), post.compile({ colors: [screen.format], sampleCount: 1 })]);
+    const [hash] = await Promise.all([shaderFingerprint(), post.compile({ colors: [screen.format], sampleCount: 1 })]);
     signal?.throwIfAborted();
     assertUsable();
     let exportCompiled = false;
@@ -90,10 +90,19 @@ export async function createRenderer(canvas: HTMLCanvasElement, onError: (error:
       });
     }
     async function draw(s: Settings, w: number, h: number, tile: TileRegion, destination: Target, quality: Quality, signal?: AbortSignal): Promise<void> {
-      const cancelled = (): boolean => disposed || !!signal?.aborted || (destination === screen && document.hidden);
+      const cancelled = (): boolean => disposed || !!signal?.aborted || (canvas !== null && destination === screen && document.hidden);
       if (cancelled()) return;
       try {
         assertUsable();
+        const transmissive = s.transmission * (1 - s.metallic) > 0;
+        const key = `${s.scene}:${transmissive}`;
+        let scene = scenes.get(key);
+        if (!scene) {
+          scene = effect(gpu, sceneShader(s.scene, transmissive), { label: `scene-${key}`, set: { u: initial, sampleSums } });
+          scenes.set(key, scene);
+          await scene.compile(chunk);
+          if (cancelled()) return;
+        }
         const { width, height } = tile;
         if (width > gpu.gpu.limits.maxTextureDimension2D || height > gpu.gpu.limits.maxTextureDimension2D) throw new Error('Requested tile exceeds GPU texture limits.');
         if (hdr.size[0] !== width || hdr.size[1] !== height) {
@@ -136,7 +145,7 @@ export async function createRenderer(canvas: HTMLCanvasElement, onError: (error:
               sceneUniforms.emit[1] = sampleIndex;
               scene.set({ u: sceneUniforms });
               const started = performance.now();
-              frame(gpu, (f) => f.pass(chunk, scene));
+              frame(gpu, (f) => f.pass(chunk, scene!));
               if (sampleIndex === sampleCount - 1) {
                 // OffscreenTarget textures lack COPY_DST in vGPU 0.5; the assembled
                 // sampled texture above explicitly supports native exact texel copies.

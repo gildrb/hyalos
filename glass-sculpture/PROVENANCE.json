@@ -1,0 +1,9 @@
+{
+  "source": "https://vgpu.sh/examples/glass-sculpture",
+  "command": "npx vgpu examples pull glass-sculpture --out ./glass-sculpture",
+  "revision": "6fa27bb458ffc3f498727090f09dce3fe5faabb43689fd669d633a2a23dc36bb",
+  "aggregateSha256": "84cddff900b735700da23a6ed124ae99525fa9fdeb882e8920b0c1f593dc001e",
+  "verifiedFiles": 9,
+  "verifiedBytes": 33662,
+  "attribution": "Concept and visual design by Kazuyuki Chinda (@ckazu); vGPU, Vercel, MIT."
+}
