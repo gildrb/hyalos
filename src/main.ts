@@ -7,7 +7,7 @@ async function boot(): Promise<void> {
   const detail = document.getElementById('startup-detail');
   try {
     if (!root) throw new Error('The application mount point is missing.');
-    if (location.protocol === 'file:') throw new Error('Source HTML cannot run as a file. Run npm install and npm run dev, then open the printed localhost URL.');
+    if (location.protocol === 'file:') throw new Error('Source HTML cannot run as a file. Run vp install and vp dev, then open the printed localhost URL.');
     if (getComputedStyle(document.documentElement).getPropertyValue('--hyalos-css-loaded').trim() !== '1') {
       throw new Error('The stylesheet did not load. Serve the complete project through Vite+, or serve the complete dist directory.');
     }

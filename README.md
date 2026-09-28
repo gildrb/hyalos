@@ -7,8 +7,8 @@ A local visual laboratory built with TypeScript, Preact, Vite+ and direct vGPU. 
 Use Node 22.18 or newer. Install the committed dependency lock, then start Vite+:
 
 ```sh
-npm ci
-npm run dev
+vp install
+vp dev
 ```
 
 Open the printed localhost URL. Do not double-click source `index.html`. WebGPU needs HTTPS or localhost and a compatible browser with hardware acceleration. The UI and recipe editing remain available when GPU initialization fails; live image export does not substitute a reference thumbnail.
@@ -79,20 +79,20 @@ MIT simplex noise and ordered dithering ports retain source provenance and licen
 ## Build, serve and test
 
 ```sh
-npm test
-npm run build
-npx playwright install chromium
-npm run test:browser
-npm run test:gpu
+vp test
+vp run build
+vp exec playwright install chromium
+vp run test:browser
+vp run test:gpu
 ```
 
 `build` runs strict TypeScript checking and Vite+. `test:browser` checks the production artifact at both root and subdirectory paths with WebGPU deliberately unavailable. `test:gpu` separately runs actual WGSL, pixel comparisons, tiling, recipe export and the live editor through Chromium's software adapter. It is not a hardware performance benchmark and must not silently skip missing adapters.
 
 ```sh
-npm run build
-npm run serve
+vp run build
+vp run serve
 # Subdirectory deployment test:
-BASE_PATH=/visuals/ PORT=4174 npm run serve
+BASE_PATH=/visuals/ PORT=4174 vp run serve
 ```
 
 For a static host, deploy the complete contents of `dist`. Assets use build-managed relative paths. The included static server emits UTF-8 MIME types and rejects missing asset paths rather than returning HTML for them.
@@ -108,7 +108,7 @@ Read [repair notes](docs/REPAIR.md), [validation evidence](docs/VALIDATION.md) a
 With the native vGPU adapter available:
 
 ```sh
-npm run render:studies -- --width=960 --quality=final --out=src/assets/presets
+vp run render:studies --width=960 --quality=final --out=src/assets/presets
 node scripts/export-recipes.mjs
 ```
 

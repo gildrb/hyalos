@@ -12,5 +12,5 @@ export default defineConfig({
       args: ['--enable-unsafe-webgpu', '--enable-features=Vulkan', '--use-angle=vulkan', '--use-vulkan=swiftshader', '--use-webgpu-adapter=swiftshader', '--disable-vulkan-surface', '--disable-gpu-watchdog'],
     },
   },
-  webServer: { command: 'npm run dev', url: 'http://127.0.0.1:5173', reuseExistingServer: false, timeout: 120000 },
+  webServer: { command: 'vp dev', url: 'http://127.0.0.1:5173', reuseExistingServer: false, timeout: 120000 },
 });

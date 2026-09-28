@@ -14,15 +14,15 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: voidzero-dev/setup-vp@v1.21.1
         with:
           node-version: '22'
-          cache: npm
-      - run: npm ci
-      - run: npm test
-      - run: npm run build
-      - run: npx playwright install --with-deps chromium
-      - run: npm run test:browser
+          cache: true
+      - run: vp install --frozen-lockfile
+      - run: vp test
+      - run: vp run build
+      - run: vp exec playwright install --with-deps chromium
+      - run: vp run test:browser
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
@@ -33,14 +33,14 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: voidzero-dev/setup-vp@v1.21.1
         with:
           node-version: '22'
-          cache: npm
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium
+          cache: true
+      - run: vp install --frozen-lockfile
+      - run: vp exec playwright install --with-deps chromium
       - run: sudo apt-get install -y libvulkan1 mesa-vulkan-drivers xvfb xauth
-      - run: xvfb-run -a npm run test:gpu
+      - run: xvfb-run -a vp run test:gpu
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -1,4 +1,4 @@
-import test from 'node:test';
+import { test } from 'vite-plus/test';
 import assert from 'node:assert/strict';
 import { DEFAULT } from '../src/model.ts';
 import { renderPixels, exportSequence } from '../src/export.ts';

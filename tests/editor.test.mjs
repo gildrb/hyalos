@@ -1,4 +1,4 @@
-import test from 'node:test';
+import { test } from 'vite-plus/test';
 import assert from 'node:assert/strict';
 import { Editor } from '../src/editor.ts';
 import { DEFAULT, preset, documentFor } from '../src/model.ts';

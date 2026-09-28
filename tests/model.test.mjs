@@ -1,4 +1,4 @@
-import test from 'node:test';
+import { test } from 'vite-plus/test';
 import assert from 'node:assert/strict';
 import { DEFAULT, PRESETS, RANGES, preset, validateSettings, documentFor, parseDocument, nextSeed, loopPhase, validateExport, exportTiles, History } from '../src/model.ts';
 import { oklchToLinear, gamutMap } from '../src/color.ts';

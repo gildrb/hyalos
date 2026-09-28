@@ -102,12 +102,12 @@ The nine earlier thumbnails retain their historical embedded shader hashes; Coro
 ## Reproduce
 
 ```sh
-npm ci
-npm test
-npm run build
-npx playwright install --with-deps chromium
-npm run test:browser
-npm run test:gpu
+vp install
+vp test
+vp run build
+vp exec playwright install --with-deps chromium
+vp run test:browser
+vp run test:gpu
 ```
 
 Missing adapters, wrong pixel buffers and failed GPU initialization must fail the GPU suite, never silently skip or pass. The publication baseline could not reach the package registry locally and used GitHub Actions for full build/browser evidence; the later qualification above includes local builds and isolated hardware execution.

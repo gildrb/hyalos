@@ -94,7 +94,7 @@ Hyalos's original transport follows standard models. The ORB-31 geometry excepti
 - PBRT microfacets: https://pbr-book.org/4ed/Reflection_Models/Roughness_Using_Microfacet_Theory
 - PBRT phase functions: https://pbr-book.org/4ed/Volume_Scattering/Phase_Functions
 - Bjorn Ottosson, Oklab: https://bottosson.github.io/posts/oklab/
-- Installed vGPU documentation: `npx vgpu docs find effect`, `npx vgpu docs find target`, `npx vgpu docs find performance`.
+- Installed vGPU documentation: `vp exec vgpu docs find effect`, `vp exec vgpu docs find target`, `vp exec vgpu docs find performance`.
 
 ## Studio update, 23 September 2026
 
