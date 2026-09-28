@@ -49,27 +49,28 @@ function* pngChunks(bytes: Uint8Array) {
   }
   throw new Error('Truncated PNG.');
 }
+const PNG_KEYWORD = 'hyalos.scene\0';
 export function addPngProject(bytes: Uint8Array, json: string): Uint8Array {
   if (encoder.encode(json).length > 65536) throw new Error('Project metadata too large.');
-  const payload = encoder.encode(`hyalos.scene\0${json}`), tag = encoder.encode('tEXt');
+  const payload = encoder.encode(`${PNG_KEYWORD}${json}`), tag = encoder.encode('tEXt');
   const chunk = new Uint8Array(payload.length + 12), view = new DataView(chunk.buffer);
   view.setUint32(0, payload.length); chunk.set(tag, 4); chunk.set(payload, 8);
   view.setUint32(chunk.length - 4, crc32(chunk.subarray(4, -4)));
   const parts = [bytes.subarray(0, 8)];
   for (const entry of pngChunks(bytes)) {
     if (entry.type === 'IEND') parts.push(chunk);
-    if (entry.type === 'tEXt' && decoder.decode(entry.data.subarray(0, 10)) === 'hyalos.scene\0') continue;
+    if (entry.type === 'tEXt' && decoder.decode(entry.data.subarray(0, PNG_KEYWORD.length)) === PNG_KEYWORD) continue;
     parts.push(bytes.subarray(entry.start, entry.end));
   }
   return concat(parts);
 }
 export function readPngProject(bytes: Uint8Array): string {
   for (const chunk of pngChunks(bytes)) {
-    if (chunk.type !== 'tEXt' || chunk.data.length > 65546) continue;
+    if (chunk.type !== 'tEXt' || chunk.data.length > 65536 + PNG_KEYWORD.length) continue;
     const text = decoder.decode(chunk.data);
-    if (text.startsWith('hyalos.scene\0')) {
+    if (text.startsWith(PNG_KEYWORD)) {
       if (crc32(bytes.subarray(chunk.start + 4, chunk.end - 4)) !== chunk.crc) throw new Error('PNG metadata checksum failed.');
-      return text.slice(10);
+      return text.slice(PNG_KEYWORD.length);
     }
   }
   throw new Error('This PNG has no embedded Hyalos project.');

@@ -13,8 +13,7 @@ button:hover:not(:disabled){color:oklch(.99 .003 85)}
 button svg{flex-shrink:0;vertical-align:middle}
 .editor{height:100dvh;min-height:360px;display:flex;flex-direction:column}
 .topbar{min-height:64px;flex-shrink:0;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:10px 24px;gap:20px}
-.brand{display:block;flex:0 0 96px;height:32px;overflow:hidden}
-.brand img{display:block;width:100%;height:100%;object-fit:cover}
+.brand{display:block;flex:0 0 auto;line-height:32px;color:var(--text);font-weight:600;letter-spacing:.02em;text-decoration:none}
 .header-actions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:20px;margin-left:auto}
 .primary{background:var(--text);color:var(--bg);padding:11px 16px;border-radius:5px;font-size:14px;font-weight:500;display:inline-flex;align-items:center;gap:12px;justify-content:center;min-height:38px;white-space:nowrap}
 .primary:hover:not(:disabled){background:oklch(.98 .008 85);color:var(--bg)}
@@ -134,7 +133,7 @@ progress{width:100%;height:4px;accent-color:var(--accent)}
 @media(max-width:900px){.topbar{min-height:60px;padding:10px 16px}.workspace{grid-template-columns:minmax(0,1fr) 300px}.library{display:none;position:fixed;left:0;top:100px;bottom:0;width:240px;background:var(--panel);z-index:10}.editor[data-panel=presets] .library{display:flex}.mobile-toolbar{height:40px;flex-shrink:0;display:flex;align-items:stretch;padding:0 16px;border-bottom:1px solid var(--line)}.mobile-toolbar button{font-size:14px;color:var(--muted);padding:0 10px}.mobile-toolbar button[aria-expanded=true]{color:var(--text)}.mobile-toolbar [data-panel=inspector]{display:none}.panel-scrim{display:block;position:fixed;inset:100px 0 0;background:oklch(.06 .005 260 / .5);z-index:9}.library-bottom{padding-bottom:max(16px,env(safe-area-inset-bottom))}}
 @media(max-width:650px){
   .topbar{gap:12px;padding:10px 14px}
-  .brand{flex-basis:74px;height:28px}
+  .brand{line-height:28px}
   .header-actions{gap:12px;min-width:0}
   .header-actions .text-button{font-size:14px}
   .header-actions svg{display:none}

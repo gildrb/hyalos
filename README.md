@@ -13,7 +13,7 @@ npm run dev
 
 Open the printed localhost URL. Do not double-click source `index.html`. WebGPU needs HTTPS or localhost and a compatible browser with hardware acceleration. The UI and recipe editing remain available when GPU initialization fails; live image export does not substitute a reference thumbnail.
 
-The existing repository is `gildrb/hyalos`. The package keeps its original `hyalos` name.
+Repository: `gildrb/hyalos`.
 
 ## Glass Sculpture workspace
 

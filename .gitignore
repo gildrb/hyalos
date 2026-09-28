@@ -8,6 +8,9 @@ test-results/
 .env*
 !.env.example
 exports/
+*.key
+*.crt
+*.pem
 
 __pycache__/
 *.pyc

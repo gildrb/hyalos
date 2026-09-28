@@ -24,7 +24,7 @@ test('PNG recipe embed, recover, and replace metadata', () => {
   assert.equal(new TextDecoder().decode(b).split('hyalos.scene').length,2);
 });
 test('PNG metadata checksum detects tampering', () => {
-  const a=addPngProject(PNG,'{"test":1}'); const i=Buffer.from(a).indexOf('hyalos.scene'); a[i+12]^=1;
+  const a=addPngProject(PNG,'{"test":1}'); const i=Buffer.from(a).indexOf('hyalos.scene'); a[i+15]^=1;
   assert.throws(()=>readPngProject(a),/checksum/i);
 });
 test('missing, oversized, invalid and truncated PNG metadata is rejected', () => {
