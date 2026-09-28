@@ -27,7 +27,7 @@ The official nine-file example is preserved, with CLI verification recorded in `
 
 ## Expanded Glass studio, 2026-09-23
 
-The current implementation supersedes earlier fixed-size export and two-shape composition notes: 15 forms, 33 source shadercn materials, persistent controls, reversed horizontal orbit, 8× macro lens, custom glass and light colors, configurable effects and tiled 4K/custom PNG export. The shadercn programs are projected animated materials, not arbitrary-shape physical volume simulations. Zero-strength materials bypass sampling; full-metal shading skips transmission; bounded HDR prevents overflow blocks. See README and RENDERING for the current behavior.
+The current implementation supersedes earlier fixed-size export and two-shape composition notes: 16 forms, 33 source shadercn materials, persistent controls, reversed horizontal orbit, 8× macro lens, custom glass and light colors, configurable effects and tiled 4K/custom PNG export. The shadercn programs are projected animated materials, not arbitrary-shape physical volume simulations. Zero-strength materials bypass sampling; full-metal shading skips transmission; bounded HDR prevents overflow blocks. See README and RENDERING for the current behavior.
 
 ## Main workspace and environment controls
 

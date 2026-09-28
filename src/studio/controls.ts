@@ -1,5 +1,5 @@
 import { ORB_CATALOG } from './orbs/catalog.ts';
-export const SHAPES = ['knot', 'gyroid', 'droplets', 'vesper', 'reliquary', 'trefoil', 'mobius', 'schwarz', 'petal', 'torus', 'helix', 'ribbon', 'prism', 'pearl', 'wave'] as const;
+export const SHAPES = ['knot', 'gyroid', 'droplets', 'vesper', 'reliquary', 'trefoil', 'mobius', 'schwarz', 'petal', 'torus', 'helix', 'ribbon', 'prism', 'pearl', 'wave', 'asymptote'] as const;
 export const GLASS_TINTS = ['clear', 'rose', 'cobalt', 'emerald', 'amber', 'violet', 'ice', 'smoke', 'custom'] as const;
 export const LIGHT_RIG_NAMES = ['studio', 'noir', 'gel', 'golden', 'lunar', 'custom'] as const;
 export const RENDER_SCALES = [0.5, 0.75, 1] as const;

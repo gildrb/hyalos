@@ -191,7 +191,7 @@ export function StudioApp() {
           </details>
           <p class="glass-help">Every control updates the live render. Lower the render scale for faster interaction; PNG export uses the dimensions above at full render scale.</p>
         </fieldset>
-        <div class="glass-credit"><a href="https://vgpu.sh/examples/glass-sculpture" target="_blank" rel="noreferrer">Glass Sculpture / vGPU ↗</a><p>Concept and visual design by Kazuyuki Chinda (@ckazu). Original optical pipeline, extended with twelve Hyalos shapes and adjustable finishing.</p></div>
+        <div class="glass-credit"><a href="https://vgpu.sh/examples/glass-sculpture" target="_blank" rel="noreferrer">Glass Sculpture / vGPU ↗</a><p>Concept and visual design by Kazuyuki Chinda (@ckazu). Original optical pipeline, extended with thirteen Hyalos shapes and adjustable finishing.</p></div>
       </aside>
     </main>
     <div class="glass-notice" role="status" hidden={!notice}>{notice}<button aria-label="Dismiss notice" onClick={() => setNotice('')}>×</button></div>

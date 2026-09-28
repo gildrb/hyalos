@@ -69,6 +69,64 @@ fn rounded_box_distance(point: vec3f, bounds: vec3f, radius: f32) -> f32 {
   return length(max(delta, vec3f(0.0))) + min(max(delta.x, max(delta.y, delta.z)), 0.0) - radius;
 }
 
+// Asymptote: a turning tower and a ribbed dome, each surrendering pieces toward one point.
+const ASYMPTOTE_MEET: vec3f = vec3f(0.06, 0.5, 0.1);
+
+fn tower_distance(q: vec3f) -> f32 {
+  let t = q - vec3f(-0.85, 0.0, 0.0);
+  var d = max(length(t.xz) - 0.05, abs(t.y + 0.08) - 0.93);
+  d = min(d, rounded_box_distance(t - vec3f(0.0, -1.0, 0.0), vec3f(0.34, 0.022, 0.34), 0.008));
+  // Nine remaining floors, each turned 0.2 rad; the cantilever toward the dome grows by 1.45 per floor.
+  for (var i = 0; i < 9; i += 1) {
+    let f = f32(i);
+    let offset = t - vec3f(0.006 * pow(1.45, f), -0.92 + f * 0.15, 0.0);
+    let turned = rotate2(f * 0.2) * offset.xz;
+    d = min(d, rounded_box_distance(vec3f(turned.x, offset.y, turned.y), vec3f(0.23, 0.012, 0.23), 0.008));
+  }
+  return d;
+}
+
+fn dome_distance(q: vec3f) -> f32 {
+  let u = q - vec3f(0.7, -0.98, 0.0);
+  let radius = 0.62;
+  var d = torus_distance(u, vec2f(radius, 0.024));
+  d = min(d, torus_distance(u - vec3f(0.0, 0.606, 0.0), vec2f(0.13, 0.02)));
+  d = min(d, max(length(u.xz) - radius - 0.08, abs(u.y + 0.045) - 0.022));
+  // Ten meridian ribs; the two facing the tower have left.
+  for (var j = 0; j < 10; j += 1) {
+    let azimuth = f32(j) * 0.6283185 + 0.3141593;
+    if (cos(azimuth) < -0.7) { continue; }
+    let across = vec2f(cos(azimuth), sin(azimuth));
+    let radial = dot(u.xz, across);
+    let normal = dot(u.xz, vec2f(-across.y, across.x));
+    let angle = clamp(atan2(u.y, radial), 0.0, 1.3589);
+    d = min(d, length(vec3f(radial - radius * cos(angle), u.y - radius * sin(angle), normal)) - 0.022);
+  }
+  return d;
+}
+
+// Zeno's series: every piece covers 60% of the remaining way and shrinks; the two never touch.
+fn envoy_distance(q: vec3f) -> f32 {
+  var d = 100.0;
+  let floors = vec3f(-0.79, 0.62, 0.0) - ASYMPTOTE_MEET;
+  let ribs = vec3f(0.19, -0.63, 0.0) - ASYMPTOTE_MEET;
+  let axis = -normalize(ribs);
+  for (var k = 0; k < 6; k += 1) {
+    let f = f32(k);
+    let reach = 0.78 * pow(0.6, f);
+    let size = 0.22 * pow(0.7, f + 1.0);
+    let floor_point = q - ASYMPTOTE_MEET - floors * reach;
+    let turned = rotate2((9.0 + f) * 0.2) * floor_point.xz;
+    let tumbled = vec3f(rotate2(f * 0.22) * vec2f(turned.x, floor_point.y), turned.y);
+    d = min(d, rounded_box_distance(tumbled, vec3f(size, size * 0.055 + 0.004, size), 0.006));
+    let ring_point = q - ASYMPTOTE_MEET - ribs * reach;
+    let along = dot(ring_point, axis);
+    let ring = length(vec2f(length(ring_point - axis * along) - 0.15 * pow(0.72, f), along));
+    d = min(d, ring - max(0.018 * pow(0.72, f), 0.005));
+  }
+  return d;
+}
+
 // Hyalos extensions. Closed, smooth distance fields avoid detached foil fragments.
 fn hyalos_distance(world: vec3f, mode: i32) -> f32 {
   let turn = rotate2(params.time * 0.25) * world.xz;
@@ -144,6 +202,15 @@ fn hyalos_distance(world: vec3f, mode: i32) -> f32 {
   if (mode == 14) {
     let waves=sin(p.x*4.4+p.y)*cos(p.y*3.8-p.z)*0.09+sin(p.z*5.2+p.x)*0.055;
     return (length(p*vec3f(1.0,0.85,1.0))-0.88+waves)*0.5;
+  }
+  if (mode == 15) {
+    let s = 0.82;
+    // Face the default camera (yaw 0.9) so the pair reads side by side.
+    let front = rotate2(0.9) * p.xz;
+    let q = vec3f(front.x, p.y, front.y) / s;
+    let bound = length(q - vec3f(0.2, -0.1, 0.0)) - 1.45;
+    if (bound > 0.3) { return bound * s; }
+    return min(min(tower_distance(q), dome_distance(q)), envoy_distance(q)) * s * 0.9;
   }
   // Three interwoven organic petals with a continuous polished surface.
   let a = torus_distance(p,vec2f(0.72,0.13));
@@ -236,7 +303,53 @@ fn softbox(direction: vec3f, light_direction: vec3f, hardness: f32, power: f32) 
   return pow(clamp(dot(direction, light_direction), 0.0, 1.0), hardness) * power;
 }
 
+// Asymptote's void: deterministic spheres at finite depth, with parallax and haze.
+// Each sphere uses the sculpture's glass: Fresnel reflection, two-interface refraction, tint absorption, metalness.
+fn void_spheres(origin: vec3f, direction: vec3f, backdrop: vec3f) -> vec3f {
+  if (i32(params.shape + 0.5) != 15) { return backdrop; }
+  var nearest = 1e9;
+  var color = backdrop;
+  let tint = absorption_color();
+  let tinted = step(0.01, length(tint));
+  for (var i = 0; i < 88; i += 1) {
+    let seed = f32(i) + 1.0;
+    let h = fract(sin(vec3f(seed * 12.9898, seed * 78.233, seed * 37.719)) * 43758.5453);
+    let g = fract(sin(vec3f(seed * 93.989, seed * 67.345, seed * 21.437)) * 24634.6345);
+    let axis = normalize(h * 2.0 - 1.0 + vec3f(0.0, 0.0001, 0.0));
+    let center = axis * (11.0 + 28.0 * g.x * g.x);
+    let radius = 0.08 + 0.75 * g.y * g.y * g.y;
+    let oc = origin - center;
+    let b = dot(oc, direction);
+    let h2 = b * b - dot(oc, oc) + radius * radius;
+    if (h2 <= 0.0) { continue; }
+    let t = -b - sqrt(h2);
+    if (t <= 0.0 || t >= nearest) { continue; }
+    nearest = t;
+    let n = normalize(oc + direction * t);
+    let reflected = studio_sky(reflect(direction, n));
+    let inside = refract(direction, n, 1.0 / GLASS_IOR);
+    // A chord through a sphere leaves at distance -2 R (inside · n).
+    let chord = -2.0 * radius * dot(inside, n);
+    let exit_normal = normalize(oc + direction * t + inside * chord);
+    var outward = refract(inside, -exit_normal, GLASS_IOR);
+    if (dot(outward, outward) < 0.5) { outward = reflect(inside, -exit_normal); }
+    let transmitted = studio_sky(outward) * exp(-(vec3f(1.0) - tint) * chord * params.custom_tint.w * tinted);
+    var glass = mix(transmitted, reflected, fresnel_schlick(dot(-direction, n)));
+    glass = mix(glass, reflected * mix(vec3f(1.0), tint, tinted * 0.3), params.metalness);
+    color = mix(glass, backdrop, 1.0 - exp(-max(t - 8.0, 0.0) * 0.06));
+  }
+  return color;
+}
+
 fn studio_radiance(direction: vec3f) -> vec3f {
+  return studio_radiance_from(vec3f(0.0), direction);
+}
+
+fn studio_radiance_from(origin: vec3f, direction: vec3f) -> vec3f {
+  return void_spheres(origin, direction, studio_sky(direction));
+}
+
+fn studio_sky(direction: vec3f) -> vec3f {
   let sky_mix = pow(clamp(direction.y * 0.5 + 0.5, 0.0, 1.0), 1.5);
   var color = mix(params.background_bottom.rgb, params.background_top.rgb, sky_mix) * params.atmosphere_color.w;
   color += params.key_color.rgb * softbox(direction, normalize(params.key.xyz), 24.0, params.key.w);
@@ -270,9 +383,9 @@ fn reflection_radiance(direction: vec3f) -> vec3f {
     studio_radiance(normalize(direction+bitangent*radius))+
     studio_radiance(normalize(direction-bitangent*radius)));
 }
-fn background_radiance(direction: vec3f) -> vec3f {
+fn background_radiance(origin: vec3f, direction: vec3f) -> vec3f {
   let sky_mix = pow(clamp(direction.y*0.5+0.5,0.0,1.0),1.5);
-  return mix(params.background_bottom.rgb,params.background_top.rgb,sky_mix) * params.atmosphere_color.w;
+  return void_spheres(origin, direction, mix(params.background_bottom.rgb,params.background_top.rgb,sky_mix) * params.atmosphere_color.w);
 }
 fn absorption_color() -> vec3f {
   let mode = i32(params.tint + 0.5);
@@ -435,9 +548,9 @@ fn shade_sample(global_uv: vec2f) -> vec3f {
       );
       floor_color = mix(floor_color, ghost, clamp(fresnel_schlick(-ray.y) * 1.5, 0.0, 0.85));
     }
-    color = mix(floor_color, select(background_radiance(ray),studio_radiance(ray),params.visible_lights>0.5), smoothstep(3.0, 8.0, length(floor_point.xz)));
+    color = mix(floor_color, select(background_radiance(camera_position,ray),studio_radiance_from(camera_position,ray),params.visible_lights>0.5), smoothstep(3.0, 8.0, length(floor_point.xz)));
   } else {
-    color = select(background_radiance(ray),studio_radiance(ray),params.visible_lights>0.5);
+    color = select(background_radiance(camera_position,ray),studio_radiance_from(camera_position,ray),params.visible_lights>0.5);
     if (params.atmosphere > 0.0) {
       color = mix(color,mix(params.background_bottom.rgb,params.background_top.rgb,global_uv.y)*0.3*params.atmosphere_color.w,params.atmosphere);
       let beam = exp(-pow((screen.x-screen.y*0.7-0.22)/0.3,2.0));
