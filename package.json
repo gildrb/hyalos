@@ -12,6 +12,7 @@
     "dev": "vp dev",
     "build": "vp run shaders:orb31 && vp run shaders:orbs && vp run typecheck && vp build",
     "preview": "vp preview",
+    "deploy": "vp run build && bunx wrangler@4.151.2 deploy",
     "check": "vp check",
     "test": "vp test",
     "test:browser": "playwright test",

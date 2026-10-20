@@ -18,3 +18,7 @@ Ten studies explore polished metal, amber and clear glass: silver knots, crystal
 Form controls geometry, seed and camera. Light controls material roughness, metallicity, power, emitter radius and participating-medium density. Finish controls optical, dot-matrix, ordered-dither and phosphor treatments, the OKLCH palette, exposure, grain and lens scattering.
 
 Drag the canvas to compose. Control-scroll zooms. Ctrl/Cmd Z and Ctrl/Cmd Shift Z undo and redo. Double-click a slider to reset it. Edits automatically queue a preview after a short debounce; Render requests it immediately. Draft, Balanced and Final quality are available beside Render. Cancel render stops work at the next safe submission boundary; idle and hidden tabs do not keep rendering.
+
+## Deploy
+
+Production is the Cloudflare Worker `hyalos` (static assets only) at `hyalos.gildrb.com`, configured in `wrangler.jsonc`. `vp run deploy` builds and runs `wrangler deploy`.

@@ -1,0 +1,8 @@
+{
+  "name": "hyalos",
+  "compatibility_date": "2026-10-20",
+  "assets": {
+    "directory": "./dist"
+  },
+  "routes": [{ "pattern": "hyalos.gildrb.com", "custom_domain": true }]
+}
