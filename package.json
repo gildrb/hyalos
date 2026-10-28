@@ -2,12 +2,8 @@
   "name": "hyalos",
   "version": "0.2.0",
   "private": true,
-  "type": "module",
   "description": "A local, seeded WebGPU visual laboratory for distributed intelligence.",
-  "packageManager": "pnpm@12.6.0",
-  "engines": {
-    "node": ">=22.18.0"
-  },
+  "type": "module",
   "scripts": {
     "dev": "vp dev",
     "build": "vp run shaders:orb31 && vp run shaders:orbs && vp run typecheck && vp build",
@@ -36,6 +32,10 @@
     "pngjs": "7.0.0",
     "typescript": "5.9.3",
     "unplugin-typegpu": "0.12.3",
-    "vite-plus": "0.3.3"
-  }
+    "vite-plus": "catalog:"
+  },
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "packageManager": "pnpm@12.6.0"
 }
